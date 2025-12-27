@@ -12,7 +12,10 @@ import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
+import { useConversionHistory } from '@/hooks/useConversionHistory';
 import { textToBraille, type BrailleGrade } from '@/lib/braille';
+import { simplifyTextForBraille } from '@/lib/text-simplification';
+import { getErrorMessage } from '@/lib/error-messages';
 import { feedback, initAudio } from '@/lib/audio-feedback';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -28,10 +31,13 @@ export default function Index() {
   const [file, setFile] = useState<File | null>(null);
   const [extractedText, setExtractedText] = useState('');
   const [brailleGrade, setBrailleGrade] = useState<BrailleGrade>('grade1');
+  const [simplifyLayout, setSimplifyLayout] = useState(false);
   const [brailleOutput, setBrailleOutput] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [showDots, setShowDots] = useState(false);
+  const [lastDownloadFormat, setLastDownloadFormat] = useState<'brf' | 'dxp' | 'unicode'>('brf');
   const { toast } = useToast();
+  const { addEntry } = useConversionHistory();
 
   // Initialize audio on mount
   useEffect(() => {
@@ -56,7 +62,6 @@ export default function Index() {
       const base64Promise = new Promise<string>((resolve, reject) => {
         reader.onload = () => {
           const result = reader.result as string;
-          // Remove data URL prefix
           const base64 = result.split(',')[1];
           resolve(base64);
         };
@@ -76,7 +81,7 @@ export default function Index() {
 
       if (error) throw error;
 
-      if (data?.text) {
+      if (data?.text && data.text.trim().length > 0) {
         setExtractedText(data.text);
         setCurrentStep(2);
         feedback('success', 'Text extracted successfully');
@@ -87,13 +92,14 @@ export default function Index() {
       } else {
         throw new Error('No text could be extracted from the image');
       }
-    } catch (err: any) {
+    } catch (err) {
       console.error('OCR Error:', err);
-      feedback('error', 'Failed to process file');
+      const errorInfo = getErrorMessage(err, 'ocr');
+      feedback('error', errorInfo.title);
       toast({
         variant: 'destructive',
-        title: 'Processing Failed',
-        description: err.message || 'Could not extract text from the file. Please try again.',
+        title: errorInfo.title,
+        description: `${errorInfo.description} ${errorInfo.suggestion}`,
       });
     } finally {
       setIsProcessing(false);
@@ -105,10 +111,14 @@ export default function Index() {
     setIsProcessing(true);
     feedback('processing', 'Converting to Braille');
 
-    // Use setTimeout to allow UI to update
     setTimeout(() => {
       try {
-        const braille = textToBraille(extractedText, brailleGrade);
+        // Apply simplification if enabled
+        const textToConvert = simplifyLayout 
+          ? simplifyTextForBraille(extractedText)
+          : extractedText;
+
+        const braille = textToBraille(textToConvert, brailleGrade);
         setBrailleOutput(braille);
         setCurrentStep(4);
         feedback('complete', 'Conversion complete');
@@ -116,18 +126,29 @@ export default function Index() {
           title: 'Conversion Complete',
           description: 'Your Braille file is ready to download.',
         });
-      } catch (err: any) {
-        feedback('error', 'Conversion failed');
+      } catch (err) {
+        const errorInfo = getErrorMessage(err, 'conversion');
+        feedback('error', errorInfo.title);
         toast({
           variant: 'destructive',
-          title: 'Conversion Failed',
-          description: 'Could not convert text to Braille. Please try again.',
+          title: errorInfo.title,
+          description: `${errorInfo.description} ${errorInfo.suggestion}`,
         });
       } finally {
         setIsProcessing(false);
       }
     }, 500);
-  }, [extractedText, brailleGrade, toast]);
+  }, [extractedText, brailleGrade, simplifyLayout, toast]);
+
+  // Track download for history
+  const handleDownload = useCallback((format: 'brf' | 'dxp' | 'unicode') => {
+    setLastDownloadFormat(format);
+    addEntry({
+      fileName: file?.name || 'Camera capture',
+      grade: brailleGrade,
+      format,
+    });
+  }, [file, brailleGrade, addEntry]);
 
   // Navigation handlers
   const goToStep = (step: number) => {
@@ -154,6 +175,7 @@ export default function Index() {
     setFile(null);
     setExtractedText('');
     setBrailleOutput('');
+    setSimplifyLayout(false);
     feedback('click', 'Starting over');
   };
 
@@ -215,6 +237,8 @@ export default function Index() {
                 <BrailleOptions
                   grade={brailleGrade}
                   onGradeChange={setBrailleGrade}
+                  simplifyLayout={simplifyLayout}
+                  onSimplifyChange={setSimplifyLayout}
                 />
               )}
 
@@ -244,6 +268,7 @@ export default function Index() {
                   <DownloadSection
                     braille={brailleOutput}
                     originalFilename={file?.name}
+                    onDownload={handleDownload}
                   />
                 </div>
               )}

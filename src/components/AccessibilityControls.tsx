@@ -1,20 +1,19 @@
 import { useState, useEffect } from 'react';
-import { Sun, Moon, Volume2, VolumeX, Contrast } from 'lucide-react';
+import { Volume2, VolumeX } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-import { useHighContrast } from '@/hooks/useHighContrast';
+import { ThemeSelector } from './ThemeSelector';
+import { ConversionHistory } from './ConversionHistory';
 import { setAudioEnabled, isAudioEnabled, initAudio, playFeedback } from '@/lib/audio-feedback';
 
 export function AccessibilityControls() {
-  const { isHighContrast, toggleHighContrast } = useHighContrast();
   const [audioOn, setAudioOn] = useState(isAudioEnabled());
 
   useEffect(() => {
-    // Initialize audio on first user interaction
     const handleInteraction = () => {
       initAudio();
       window.removeEventListener('click', handleInteraction);
@@ -41,23 +40,9 @@ export function AccessibilityControls() {
 
   return (
     <div className="flex items-center gap-2" role="group" aria-label="Accessibility controls">
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={toggleHighContrast}
-            aria-label={isHighContrast ? 'Disable high contrast mode' : 'Enable high contrast mode'}
-            aria-pressed={isHighContrast}
-            className="min-w-[48px] min-h-[48px]"
-          >
-            <Contrast className="w-5 h-5" />
-          </Button>
-        </TooltipTrigger>
-        <TooltipContent>
-          {isHighContrast ? 'Disable' : 'Enable'} high contrast
-        </TooltipContent>
-      </Tooltip>
+      <ConversionHistory />
+      
+      <ThemeSelector />
 
       <Tooltip>
         <TooltipTrigger asChild>

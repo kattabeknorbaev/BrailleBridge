@@ -7,16 +7,25 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
+import { SimplifyToggle } from './SimplifyToggle';
 import { cn } from '@/lib/utils';
 import type { BrailleGrade } from '@/lib/braille';
 
 interface BrailleOptionsProps {
   grade: BrailleGrade;
   onGradeChange: (grade: BrailleGrade) => void;
+  simplifyLayout: boolean;
+  onSimplifyChange: (checked: boolean) => void;
   className?: string;
 }
 
-export function BrailleOptions({ grade, onGradeChange, className }: BrailleOptionsProps) {
+export function BrailleOptions({ 
+  grade, 
+  onGradeChange, 
+  simplifyLayout, 
+  onSimplifyChange,
+  className 
+}: BrailleOptionsProps) {
   return (
     <div className={cn('space-y-8 animate-fade-in', className)}>
       <div>
@@ -93,6 +102,12 @@ export function BrailleOptions({ grade, onGradeChange, className }: BrailleOptio
           </div>
         </RadioGroup>
       </div>
+
+      {/* Layout Simplification Option */}
+      <SimplifyToggle
+        checked={simplifyLayout}
+        onCheckedChange={onSimplifyChange}
+      />
 
       {/* Format Information */}
       <div className="bg-card border border-border rounded-xl p-6">
