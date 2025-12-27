@@ -325,8 +325,8 @@ export default function Index() {
           <p>BrailleBridge — Making documents accessible to everyone</p>
           <p className="text-sm mt-2">
             Designed for blind and visually impaired users and educational institutions
-            Built by Kattabek Norbaev
           </p>
+          <p>Built by Kattabek Norbaev</p>
         </div>
       </footer>
 
