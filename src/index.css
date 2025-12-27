@@ -338,6 +338,13 @@
   }
 }
 
+#lovable-badge {
+  display: none !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
+
 @layer utilities {
   /* Text size utilities for accessibility */
   .text-accessible-sm {
