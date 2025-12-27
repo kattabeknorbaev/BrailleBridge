@@ -7,13 +7,14 @@ import { cn } from '@/lib/utils';
 interface DownloadSectionProps {
   braille: string;
   originalFilename?: string;
+  onDownload?: (format: 'brf' | 'dxp' | 'unicode') => void;
   className?: string;
 }
 
-export function DownloadSection({ braille, originalFilename = 'document', className }: DownloadSectionProps) {
+export function DownloadSection({ braille, originalFilename = 'document', onDownload, className }: DownloadSectionProps) {
   const baseName = originalFilename.replace(/\.[^/.]+$/, '');
 
-  const downloadFile = (content: string, extension: string, mimeType: string) => {
+  const downloadFile = (content: string, extension: string, mimeType: string, format: 'brf' | 'dxp' | 'unicode') => {
     const blob = new Blob([content], { type: mimeType });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -24,20 +25,21 @@ export function DownloadSection({ braille, originalFilename = 'document', classN
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
     feedback('complete', `Downloaded ${baseName}.${extension}`);
+    onDownload?.(format);
   };
 
   const handleDownloadBRF = () => {
     const brf = brailleToBRF(braille);
-    downloadFile(brf, 'brf', 'application/x-brf');
+    downloadFile(brf, 'brf', 'application/x-brf', 'brf');
   };
 
   const handleDownloadDXP = () => {
     const dxp = brailleToDXP(braille);
-    downloadFile(dxp, 'dxp', 'application/x-dxp');
+    downloadFile(dxp, 'dxp', 'application/x-dxp', 'dxp');
   };
 
   const handleDownloadTXT = () => {
-    downloadFile(braille, 'txt', 'text/plain');
+    downloadFile(braille, 'txt', 'text/plain', 'unicode');
   };
 
   return (
