@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from 'react';
 import { ArrowLeft, ArrowRight, RefreshCw } from 'lucide-react';
-import { Header } from '@/components/Header';
+import { Layout } from '@/components/Layout';
 import { StepIndicator } from '@/components/StepIndicator';
 import { FileUpload } from '@/components/FileUpload';
 import { TextPreview } from '@/components/TextPreview';
@@ -190,15 +190,8 @@ export default function Index() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-background">
-      {/* Skip to main content link */}
-      <a href="#main-content" className="skip-link">
-        Skip to main content
-      </a>
-
-      <Header />
-
-      <main id="main-content" className="flex-1 container mx-auto px-4 py-8 max-w-4xl">
+    <Layout>
+      <div className="container mx-auto px-4 py-8 max-w-4xl">
         {/* Step indicator */}
         <StepIndicator
           steps={STEPS}
@@ -317,21 +310,7 @@ export default function Index() {
             )}
           </div>
         )}
-      </main>
-
-      {/* Footer */}
-      <footer className="border-t border-border py-6 mt-auto">
-        <div className="container mx-auto px-4 text-center text-muted-foreground">
-          <p>BrailleBridge — Making documents accessible to everyone</p>
-          <p className="text-sm mt-2">
-            Designed for blind and visually impaired users and educational institutions
-          </p>
-          <p>Built by Kattabek Norbaev</p>
-        </div>
-      </footer>
-
-      {/* ARIA announcer for screen readers */}
-      <div id="aria-announcer" className="sr-only" aria-live="polite" aria-atomic="true" />
-    </div>
+      </div>
+    </Layout>
   );
 }
