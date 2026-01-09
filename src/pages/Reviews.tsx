@@ -7,6 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { MessageSquare, AlertCircle, Send, User } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 // Example feedback entries (clearly labeled)
 const exampleFeedback = [
@@ -53,16 +54,28 @@ export default function Reviews() {
 
     setIsSubmitting(true);
 
-    // Simulate submission (in a real app, this would send to a backend)
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    const { error } = await supabase
+      .from('feedback')
+      .insert({
+        name: name.trim() || null,
+        feedback: feedback.trim(),
+      });
 
-    toast({
-      title: 'Thank you!',
-      description: 'Your feedback has been received. We appreciate your input.',
-    });
+    if (error) {
+      toast({
+        variant: 'destructive',
+        title: 'Submission failed',
+        description: 'Unable to submit feedback. Please try again.',
+      });
+    } else {
+      toast({
+        title: 'Thank you!',
+        description: 'Your feedback has been received. We appreciate your input.',
+      });
+      setName('');
+      setFeedback('');
+    }
 
-    setName('');
-    setFeedback('');
     setIsSubmitting(false);
   };
 
