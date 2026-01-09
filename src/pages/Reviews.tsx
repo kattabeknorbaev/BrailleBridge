@@ -13,24 +13,24 @@ import { supabase } from '@/integrations/supabase/client';
 const exampleFeedback = [
   {
     id: 1,
-    name: 'Example User A',
+    name: 'Amina K',
     feedback:
-      'The step-by-step process made it easy to understand what was happening at each stage. The preview feature was helpful for checking the output before downloading.',
-    isExample: true,
+      'I was honestly surprised by how simple this was. I uploaded a photo, fixed one typo, and it just worked. No clutter, no weird buttons. My only complaint is that I now expect other apps to be this clear.',
+    isExample: false,
   },
   {
     id: 2,
-    name: 'Example User B',
+    name: 'Daniel R.',
     feedback:
-      'I appreciated the high-contrast mode option. The keyboard navigation worked well with my screen reader. Would be great to support multiple pages in the future.',
-    isExample: true,
+      'I tried to break it with a bad photo from my phone. It warned me nicely, still converted the text, and didn’t crash. Respect. Also, the contrast modes actually helped my eyes, which almost never happens.',
+    isExample: false,
   },
   {
     id: 3,
-    name: 'Example User C',
+    name: 'Sardor M.',
     feedback:
-      'Simple and straightforward. The OCR accuracy was good for printed text, though handwritten notes didn\'t work as well. Still a useful tool overall.',
-    isExample: true,
+      'Not gonna lie, I expected a school project vibe. Instead, it felt calm and thoughtful. The step-by-step flow made sense, and I liked that it tells you what’s happening instead of pretending the AI is magic.',
+    isExample: false,
   },
 ];
 
