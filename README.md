@@ -124,7 +124,7 @@ The project demonstrates the application of computer science to **social good**,
 
 ```bash
 # Clone the repository
-git clone <YOUR_GIT_URL>
+git clone https://github.com/kattabeknorbaev/BrailleBridge.git
 
 # Navigate into the project
 cd braillebridge
