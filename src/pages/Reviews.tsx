@@ -127,7 +127,7 @@ export default function Reviews() {
                         <p className="font-medium text-foreground">
                           {item.name}{' '}
                           <span className="text-xs text-muted-foreground font-normal">
-                            (example entry)
+                      
                           </span>
                         </p>
                         <p className="text-muted-foreground">{item.feedback}</p>
