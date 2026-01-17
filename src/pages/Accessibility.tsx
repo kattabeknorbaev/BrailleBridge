@@ -10,7 +10,6 @@ import {
   Heart,
 } from 'lucide-react';
 
-document.title = "Accessibility | BrailleBridge";
 
 
 const accessibilityFeatures = [
