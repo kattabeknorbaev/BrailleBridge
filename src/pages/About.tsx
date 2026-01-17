@@ -2,7 +2,6 @@ import { Layout } from '@/components/Layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Eye, Heart, Users, Target } from 'lucide-react';
 
-document.title = "About | BrailleBridge";
 
 
 export default function About() {
