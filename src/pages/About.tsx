@@ -2,6 +2,20 @@ import { Layout } from '@/components/Layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Eye, Heart, Users, Target } from 'lucide-react';
 
+import { useEffect } from "react";
+
+export default function About() {
+  useEffect(() => {
+    document.title = "About | BrailleBridge";
+  }, []);
+
+  return (
+    <main>
+      <h1>About BrailleBridge</h1>
+      <p>...</p>
+    </main>
+  );
+}
 
 
 export default function About() {
