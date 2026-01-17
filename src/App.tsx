@@ -14,6 +14,31 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
+import { useLocation } from "react-router-dom";
+import { useEffect } from "react";
+
+function App() {
+  const location = useLocation();
+
+  useEffect(() => {
+    const titles: Record<string, string> = {
+      "/": "BrailleBridge | Convert Documents to Braille",
+      "/about": "About | BrailleBridge",
+      "/how-it-works": "How It Works | BrailleBridge",
+      "/faq": "FAQ | BrailleBridge",
+      "/accessibility": "Accessibility | BrailleBridge",
+    };
+
+    document.title = titles[location.pathname] || "BrailleBridge";
+  }, [location.pathname]);
+
+  return (
+    // your routes here
+  );
+}
+
+
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
