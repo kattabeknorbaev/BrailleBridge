@@ -8,6 +8,8 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { HelpCircle } from 'lucide-react';
 
+document.title = "FAQ | BrailleBridge";
+
 const faqs = [
   {
     id: 'grade-difference',
