@@ -3,26 +3,145 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>BrailleBridge | Convert Documents to Braille</title>
-    <meta name="description" content="BrailleBridge converts printed documents and photos into Braille-ready formats for embossers and tactile e-readers. Designed with accessibility-first principles." />
+    
+    <!-- Primary Meta Tags -->
+    <title>BrailleBridge | Free Document to Braille Converter</title>
+    <meta name="title" content="BrailleBridge | Free Document to Braille Converter" />
+    <meta name="description" content="Convert photos and documents to Braille-ready formats (BRF, DXP) for embossers and tactile displays. Free, accessible tool supporting Grade 1 and Grade 2 Braille." />
+    <meta name="keywords" content="braille converter, document to braille, OCR braille, BRF file, braille embosser, accessibility tool, blind accessibility, visual impairment, braille translation, tactile reading" />
     <meta name="author" content="Kattabek Norbaev" />
-    <meta property="og:title" content="BrailleBridge" />
-    <meta property="og:description" content="BridgeBraille- App that translates text to BRF" />
+    <meta name="robots" content="index, follow" />
+    <meta name="language" content="English" />
+    <meta name="revisit-after" content="7 days" />
+    
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://bridgebraille.lovable.app/" />
+    
+    <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://bridgebraille.lovable.app/" />
+    <meta property="og:title" content="BrailleBridge | Free Document to Braille Converter" />
+    <meta property="og:description" content="Convert photos and documents to Braille-ready formats for embossers and tactile displays. Supports Grade 1 and Grade 2 Braille with accessibility-first design." />
+    <meta property="og:image" content="https://bridgebraille.lovable.app/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="BrailleBridge - Convert documents to Braille" />
+    <meta property="og:site_name" content="BrailleBridge" />
+    <meta property="og:locale" content="en_US" />
 
-
+    <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:url" content="https://bridgebraille.lovable.app/" />
+    <meta name="twitter:title" content="BrailleBridge | Free Document to Braille Converter" />
+    <meta name="twitter:description" content="Convert photos and documents to Braille-ready formats. Free accessibility tool supporting Grade 1 and Grade 2 Braille." />
+    <meta name="twitter:image" content="https://bridgebraille.lovable.app/og-image.png" />
+    <meta name="twitter:image:alt" content="BrailleBridge - Convert documents to Braille" />
     <meta name="twitter:site" content="@BrailleBridge" />
+    <meta name="twitter:creator" content="@BrailleBridge" />
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/favicon.ico" />
+    
+    <!-- Theme Color -->
+    <meta name="theme-color" content="#1a1f2e" />
+    <meta name="msapplication-TileColor" content="#1a1f2e" />
+    
+    <!-- Structured Data - WebApplication -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "BrailleBridge",
+      "description": "Free online tool to convert photos and documents to Braille-ready formats (BRF, DXP) for embossers and tactile displays.",
+      "url": "https://bridgebraille.lovable.app",
+      "applicationCategory": "UtilityApplication",
+      "operatingSystem": "Web Browser",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      },
+      "featureList": [
+        "OCR text extraction from images",
+        "Grade 1 (Uncontracted) Braille conversion",
+        "Grade 2 (Contracted) Braille conversion",
+        "BRF file export for embossers",
+        "DXP file export",
+        "Unicode Braille text export",
+        "Accessibility-first design"
+      ],
+      "screenshot": "https://bridgebraille.lovable.app/og-image.png",
+      "softwareVersion": "1.1",
+      "author": {
+        "@type": "Person",
+        "name": "Kattabek Norbaev"
+      },
+      "accessibilityFeature": [
+        "highContrastDisplay",
+        "largePrint",
+        "keyboardNavigation",
+        "screenReaderOptimized"
+      ],
+      "accessibilityHazard": "none"
+    }
+    </script>
+    
+    <!-- Structured Data - Organization -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "BrailleBridge",
+      "url": "https://bridgebraille.lovable.app",
+      "logo": "https://bridgebraille.lovable.app/favicon.ico",
+      "description": "Making printed materials accessible through Braille conversion technology.",
+      "sameAs": []
+    }
+    </script>
+    
+    <!-- Structured Data - BreadcrumbList -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://bridgebraille.lovable.app/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "About",
+          "item": "https://bridgebraille.lovable.app/about"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "How It Works",
+          "item": "https://bridgebraille.lovable.app/how-it-works"
+        },
+        {
+          "@type": "ListItem",
+          "position": 4,
+          "name": "FAQ",
+          "item": "https://bridgebraille.lovable.app/faq"
+        }
+      ]
+    }
+    </script>
+    
     <!-- Google tag (gtag.js) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-C7PG41R7EQ"></script>
     <script>
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
       gtag('js', new Date());
-
       gtag('config', 'G-C7PG41R7EQ');
     </script>
-    
   </head>
 
   <body>
