@@ -146,6 +146,21 @@ npm run dev
 * Direct embosser integration
 
 ---
+## Changelog
+
+### v1.1
+- Added conversion summary report
+- Added side-by-side text and Braille preview
+- Improved Braille grade explanations
+- Added Known Limitations section
+- Improved export file naming
+
+### v1.0
+- OCR text extraction
+- Grade 1 and Grade 2 Braille conversion
+- BRF, DXP, Unicode output
+- Accessibility-first design
+---
 
 ## 📌 Note
 
