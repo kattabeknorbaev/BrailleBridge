@@ -8,6 +8,8 @@ import { BrailleOptions } from '@/components/BrailleOptions';
 import { BraillePreview } from '@/components/BraillePreview';
 import { DownloadSection } from '@/components/DownloadSection';
 import { ProcessingIndicator } from '@/components/ProcessingIndicator';
+import { ConversionSummary, type OCRConfidence } from '@/components/ConversionSummary';
+import { SideBySidePreview } from '@/components/SideBySidePreview';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
@@ -35,7 +37,10 @@ export default function Index() {
   const [brailleOutput, setBrailleOutput] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [showDots, setShowDots] = useState(false);
+  const [showComparison, setShowComparison] = useState(false);
   const [lastDownloadFormat, setLastDownloadFormat] = useState<'brf' | 'dxp' | 'unicode'>('brf');
+  const [ocrConfidence, setOcrConfidence] = useState<OCRConfidence>('high');
+  const [wordCount, setWordCount] = useState(0);
   const { toast } = useToast();
   const { addEntry } = useConversionHistory();
 
@@ -83,11 +88,20 @@ export default function Index() {
 
       if (data?.text && data.text.trim().length > 0) {
         setExtractedText(data.text);
+        
+        // Calculate word count
+        const words = data.text.split(/\s+/).filter((word: string) => word.length > 0);
+        setWordCount(words.length);
+        
+        // Estimate OCR confidence based on text quality indicators
+        const estimatedConfidence = estimateOCRConfidence(data.text, words.length);
+        setOcrConfidence(estimatedConfidence);
+        
         setCurrentStep(2);
         feedback('success', 'Text extracted successfully');
         toast({
           title: 'Text Extracted',
-          description: `Found ${data.text.split(/\s+/).length} words in your document.`,
+          description: `Found ${words.length} words in your document.`,
         });
       } else {
         throw new Error('No text could be extracted from the image');
@@ -105,6 +119,25 @@ export default function Index() {
       setIsProcessing(false);
     }
   }, [toast]);
+
+  // Estimate OCR confidence based on text quality
+  const estimateOCRConfidence = (text: string, wordCount: number): OCRConfidence => {
+    // Heuristics for confidence estimation
+    const avgWordLength = text.replace(/\s+/g, '').length / wordCount;
+    const hasGibberish = /[^\x00-\x7F]{3,}/.test(text); // Multiple non-ASCII chars in a row
+    const hasExcessiveSpecialChars = (text.match(/[^a-zA-Z0-9\s.,!?'"()-]/g) || []).length > text.length * 0.1;
+    const hasVeryShortWords = text.split(/\s+/).filter(w => w.length === 1 && !/^[aAiI]$/.test(w)).length > wordCount * 0.2;
+    
+    if (hasGibberish || hasExcessiveSpecialChars) {
+      return 'low';
+    }
+    
+    if (hasVeryShortWords || avgWordLength < 3 || avgWordLength > 15) {
+      return 'medium';
+    }
+    
+    return 'high';
+  };
 
   // Convert text to Braille
   const convertToBraille = useCallback(() => {
@@ -176,6 +209,9 @@ export default function Index() {
     setExtractedText('');
     setBrailleOutput('');
     setSimplifyLayout(false);
+    setShowComparison(false);
+    setOcrConfidence('high');
+    setWordCount(0);
     feedback('click', 'Starting over');
   };
 
@@ -238,29 +274,58 @@ export default function Index() {
               {/* Step 4: Download */}
               {currentStep === 4 && (
                 <div className="space-y-8">
-                  {/* Preview toggle */}
-                  <div className="flex items-center justify-between">
+                  {/* Conversion Summary */}
+                  <ConversionSummary
+                    wordCount={wordCount}
+                    ocrConfidence={ocrConfidence}
+                    brailleGrade={brailleGrade}
+                    outputFormat={lastDownloadFormat}
+                  />
+
+                  {/* Preview controls */}
+                  <div className="flex items-center justify-between flex-wrap gap-4">
                     <h2 className="text-xl font-semibold">Braille Preview</h2>
-                    <div className="flex items-center gap-3">
-                      <Label htmlFor="show-dots" className="text-muted-foreground">
-                        Show dot pattern
-                      </Label>
-                      <Switch
-                        id="show-dots"
-                        checked={showDots}
-                        onCheckedChange={setShowDots}
-                      />
+                    <div className="flex items-center gap-6 flex-wrap">
+                      <div className="flex items-center gap-3">
+                        <Label htmlFor="show-comparison" className="text-muted-foreground">
+                          Compare with original
+                        </Label>
+                        <Switch
+                          id="show-comparison"
+                          checked={showComparison}
+                          onCheckedChange={setShowComparison}
+                        />
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <Label htmlFor="show-dots" className="text-muted-foreground">
+                          Show dot pattern
+                        </Label>
+                        <Switch
+                          id="show-dots"
+                          checked={showDots}
+                          onCheckedChange={setShowDots}
+                        />
+                      </div>
                     </div>
                   </div>
 
-                  <BraillePreview
-                    braille={brailleOutput}
-                    showDots={showDots}
-                  />
+                  {showComparison ? (
+                    <SideBySidePreview
+                      originalText={extractedText}
+                      brailleOutput={brailleOutput}
+                      showDots={showDots}
+                    />
+                  ) : (
+                    <BraillePreview
+                      braille={brailleOutput}
+                      showDots={showDots}
+                    />
+                  )}
 
                   <DownloadSection
                     braille={brailleOutput}
                     originalFilename={file?.name}
+                    brailleGrade={brailleGrade}
                     onDownload={handleDownload}
                   />
                 </div>

@@ -1,4 +1,4 @@
-import { Info } from 'lucide-react';
+import { Info, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
@@ -7,6 +7,11 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@/components/ui/collapsible';
 import { SimplifyToggle } from './SimplifyToggle';
 import { cn } from '@/lib/utils';
 import type { BrailleGrade } from '@/lib/braille';
@@ -37,7 +42,7 @@ export function BrailleOptions({
 
       {/* Grade Selection */}
       <div className="bg-card border border-border rounded-xl p-6">
-        <div className="flex items-center gap-2 mb-4">
+        <div className="flex items-center gap-2 mb-2">
           <h3 className="text-lg font-semibold">Braille Grade</h3>
           <Tooltip>
             <TooltipTrigger asChild>
@@ -53,6 +58,12 @@ export function BrailleOptions({
             </TooltipContent>
           </Tooltip>
         </div>
+        
+        {/* Inline explanation */}
+        <p className="text-sm text-muted-foreground mb-4">
+          Think of grades like typing styles: Grade 1 spells everything out (like typing each letter), 
+          while Grade 2 uses shortcuts (like texting abbreviations). Most Braille readers learn Grade 2.
+        </p>
 
         <RadioGroup
           value={grade}
@@ -77,6 +88,9 @@ export function BrailleOptions({
                 Each letter is represented by a single Braille cell. Best for beginners
                 and when accuracy is critical. Produces longer output.
               </span>
+              <span className="text-xs text-primary/80 block mt-2 italic">
+                💡 Recommended for: Beginners, educational materials, unfamiliar words
+              </span>
             </Label>
           </div>
 
@@ -98,9 +112,37 @@ export function BrailleOptions({
                 Uses contractions and abbreviations for common words and letter combinations.
                 More compact but requires familiarity with Braille contractions.
               </span>
+              <span className="text-xs text-primary/80 block mt-2 italic">
+                💡 Recommended for: Experienced readers, everyday reading, saving paper
+              </span>
             </Label>
           </div>
         </RadioGroup>
+        
+        {/* Quick reference */}
+        <Collapsible className="mt-4">
+          <CollapsibleTrigger asChild>
+            <Button variant="ghost" size="sm" className="w-full justify-between">
+              <span className="text-sm">Quick comparison example</span>
+              <ChevronDown className="w-4 h-4" />
+            </Button>
+          </CollapsibleTrigger>
+          <CollapsibleContent className="mt-2 p-3 rounded-lg bg-muted/50 text-sm">
+            <p className="text-muted-foreground mb-2">The word "the" in each grade:</p>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <p className="font-semibold">Grade 1:</p>
+                <p className="font-mono text-lg">⠞⠓⠑</p>
+                <p className="text-xs text-muted-foreground">(3 cells: t-h-e)</p>
+              </div>
+              <div>
+                <p className="font-semibold">Grade 2:</p>
+                <p className="font-mono text-lg">⠮</p>
+                <p className="text-xs text-muted-foreground">(1 cell: "the" contraction)</p>
+              </div>
+            </div>
+          </CollapsibleContent>
+        </Collapsible>
       </div>
 
       {/* Layout Simplification Option */}
