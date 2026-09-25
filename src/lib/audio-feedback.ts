@@ -1,131 +1,99 @@
-// Audio feedback utilities for accessibility
+/**
+ * Non-visual feedback: short tones for key events and announcements for
+ * screen readers through a single polite live region.
+ */
 
-type FeedbackType = 'success' | 'error' | 'upload' | 'processing' | 'complete' | 'click';
+export type FeedbackType = 'success' | 'error' | 'upload' | 'processing' | 'complete' | 'click';
 
-// Simple tone frequencies for different feedback types
-const TONES: Record<FeedbackType, { frequency: number; duration: number; type: OscillatorType }[]> = {
+type Tone = { frequency: number; duration: number; type: OscillatorType };
+
+const TONES: Record<FeedbackType, Tone[]> = {
   success: [
-    { frequency: 523.25, duration: 100, type: 'sine' }, // C5
-    { frequency: 659.25, duration: 100, type: 'sine' }, // E5
-    { frequency: 783.99, duration: 150, type: 'sine' }, // G5
+    { frequency: 523.25, duration: 90, type: 'sine' },
+    { frequency: 659.25, duration: 90, type: 'sine' },
+    { frequency: 783.99, duration: 140, type: 'sine' },
   ],
   error: [
-    { frequency: 200, duration: 200, type: 'sawtooth' },
-    { frequency: 150, duration: 300, type: 'sawtooth' },
+    { frequency: 220, duration: 160, type: 'triangle' },
+    { frequency: 165, duration: 240, type: 'triangle' },
   ],
   upload: [
-    { frequency: 440, duration: 100, type: 'sine' }, // A4
-    { frequency: 554.37, duration: 100, type: 'sine' }, // C#5
+    { frequency: 440, duration: 80, type: 'sine' },
+    { frequency: 554.37, duration: 100, type: 'sine' },
   ],
-  processing: [
-    { frequency: 440, duration: 50, type: 'sine' },
-  ],
+  processing: [{ frequency: 440, duration: 50, type: 'sine' }],
   complete: [
-    { frequency: 523.25, duration: 80, type: 'sine' },
-    { frequency: 659.25, duration: 80, type: 'sine' },
-    { frequency: 783.99, duration: 80, type: 'sine' },
-    { frequency: 1046.50, duration: 200, type: 'sine' }, // C6
+    { frequency: 523.25, duration: 70, type: 'sine' },
+    { frequency: 659.25, duration: 70, type: 'sine' },
+    { frequency: 783.99, duration: 70, type: 'sine' },
+    { frequency: 1046.5, duration: 180, type: 'sine' },
   ],
-  click: [
-    { frequency: 800, duration: 30, type: 'sine' },
-  ],
+  click: [{ frequency: 800, duration: 25, type: 'sine' }],
 };
 
+const STORAGE_KEY = 'braillebridge:sounds';
 let audioContext: AudioContext | null = null;
-let audioEnabled = true;
+let enabled = (() => {
+  try {
+    return localStorage.getItem(STORAGE_KEY) !== 'off';
+  } catch {
+    return true;
+  }
+})();
 
-/**
- * Initialize audio context (must be called after user interaction)
- */
+/** Create/resume the audio context; browsers require a user gesture first. */
 export function initAudio(): void {
-  if (!audioContext) {
-    audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-  }
-  if (audioContext.state === 'suspended') {
-    audioContext.resume();
-  }
+  if (!enabled) return;
+  const Ctx = window.AudioContext ?? (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+  if (!Ctx) return;
+  audioContext ??= new Ctx();
+  if (audioContext.state === 'suspended') void audioContext.resume();
 }
 
-/**
- * Enable or disable audio feedback
- */
-export function setAudioEnabled(enabled: boolean): void {
-  audioEnabled = enabled;
+export function setAudioEnabled(value: boolean): void {
+  enabled = value;
+  try {
+    localStorage.setItem(STORAGE_KEY, value ? 'on' : 'off');
+  } catch {
+    // ignore
+  }
+  if (value) initAudio();
 }
 
-/**
- * Check if audio feedback is enabled
- */
 export function isAudioEnabled(): boolean {
-  return audioEnabled;
+  return enabled;
 }
 
-/**
- * Play audio feedback
- */
 export function playFeedback(type: FeedbackType): void {
-  if (!audioEnabled || !audioContext) {
-    return;
-  }
-
-  const tones = TONES[type];
-  let startTime = audioContext.currentTime;
-
-  for (const tone of tones) {
-    const oscillator = audioContext.createOscillator();
-    const gainNode = audioContext.createGain();
-
-    oscillator.type = tone.type;
-    oscillator.frequency.setValueAtTime(tone.frequency, startTime);
-
-    gainNode.gain.setValueAtTime(0.3, startTime);
-    gainNode.gain.exponentialRampToValueAtTime(0.01, startTime + tone.duration / 1000);
-
-    oscillator.connect(gainNode);
-    gainNode.connect(audioContext.destination);
-
-    oscillator.start(startTime);
-    oscillator.stop(startTime + tone.duration / 1000);
-
-    startTime += tone.duration / 1000;
+  if (!enabled || !audioContext) return;
+  let start = audioContext.currentTime;
+  for (const tone of TONES[type]) {
+    const osc = audioContext.createOscillator();
+    const gain = audioContext.createGain();
+    osc.type = tone.type;
+    osc.frequency.setValueAtTime(tone.frequency, start);
+    gain.gain.setValueAtTime(0.15, start);
+    gain.gain.exponentialRampToValueAtTime(0.001, start + tone.duration / 1000);
+    osc.connect(gain).connect(audioContext.destination);
+    osc.start(start);
+    osc.stop(start + tone.duration / 1000);
+    start += tone.duration / 1000;
   }
 }
 
-/**
- * Announce text to screen readers
- */
-export function announce(message: string, priority: 'polite' | 'assertive' = 'polite'): void {
-  const announcer = document.getElementById('aria-announcer') || createAnnouncer();
-  announcer.setAttribute('aria-live', priority);
-  
-  // Clear and set new message
-  announcer.textContent = '';
-  setTimeout(() => {
-    announcer.textContent = message;
-  }, 100);
+/** Announce a message to screen readers without moving focus. */
+export function announce(message: string): void {
+  const region = document.getElementById('sr-announcer');
+  if (!region) return;
+  region.textContent = '';
+  // A short delay makes repeated identical messages be read again.
+  window.setTimeout(() => {
+    region.textContent = message;
+  }, 50);
 }
 
-/**
- * Create the ARIA announcer element
- */
-function createAnnouncer(): HTMLElement {
-  const announcer = document.createElement('div');
-  announcer.id = 'aria-announcer';
-  announcer.setAttribute('aria-live', 'polite');
-  announcer.setAttribute('aria-atomic', 'true');
-  announcer.className = 'sr-only';
-  document.body.appendChild(announcer);
-  return announcer;
-}
-
-/**
- * Combined feedback: play sound and announce
- */
-export function feedback(
-  type: FeedbackType,
-  message: string,
-  priority: 'polite' | 'assertive' = 'polite'
-): void {
+/** Tone + screen reader announcement. */
+export function feedback(type: FeedbackType, message: string): void {
   playFeedback(type);
-  announce(message, priority);
+  announce(message);
 }

@@ -175,7 +175,8 @@ Instructions:
 5. Keep punctuation and capitalization as in the original
 6. For tables, preserve structure using spaces or tabs
 7. If you cannot read a word clearly, make your best guess based on context
-8. Return ONLY the extracted text, no explanations or comments`
+8. For multi-page documents, separate pages with a blank line
+9. Return ONLY the extracted text as plain text: no explanations, comments, markdown or code fences`
             },
             {
               role: 'user',
@@ -193,7 +194,8 @@ Instructions:
               ]
             }
           ],
-          max_tokens: 4096,
+          // Enough for a long multi-page document (a dense page is ~700 tokens).
+          max_tokens: 16384,
         }),
         signal: controller.signal,
       });
