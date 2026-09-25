@@ -2,7 +2,7 @@
 
 **Turn print into braille, right in your browser.** BrailleBridge translates typed text, PDFs, Word documents and photos of printed pages into Unified English Braille (grade 1 and grade 2) and exports files ready for braille embossers and refreshable braille displays.
 
-[![CI](https://github.com/kattabeknorbaev/BrailleBridge/actions/workflows/ci.yml/badge.svg)](https://github.com/kattabeknorbaev/BrailleBridge/actions/workflows/ci.yml)
+[![CI](https://github.com/kattabeknorbaev/BrailleBridge/actions/workflows/ci.yml/badge.svg)](https://github.com/kattabeknorbaev/BrailleBridge/actions/workflows/ci.yml) [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 **Live app:** https://bridgebraille.lovable.app
 
@@ -146,6 +146,10 @@ scripts/              Test fixture generator
 
 ### v1.0
 - OCR text extraction, grade 1 and grade 2 conversion, accessibility-first design
+
+## License
+
+[MIT](LICENSE) © 2026 Kattabek Norbaev
 
 ---
 

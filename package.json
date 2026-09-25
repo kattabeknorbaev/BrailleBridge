@@ -3,6 +3,7 @@
   "private": true,
   "version": "2.0.0",
   "description": "Free, open-source print-to-braille converter (Unified English Braille grade 1 and 2) with BRF/PEF export.",
+  "license": "MIT",
   "type": "module",
   "scripts": {
     "dev": "vite",
