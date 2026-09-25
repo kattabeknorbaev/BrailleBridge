@@ -539,16 +539,48 @@ function translateLine(line: string, grade: Grade, unsupported: Set<string>, quo
   });
 }
 
+interface CachedLine {
+  segments: Segment[];
+  unsupported: string[];
+  openQuotesAfter: number;
+}
+
+/**
+ * Lines are translated independently (apart from open single quotes), so
+ * results are cached per line: while someone types in a long document only
+ * the edited paragraph is translated again.
+ */
+const lineCache = new Map<string, CachedLine>();
+const LINE_CACHE_LIMIT = 4000;
+
+function translateLineCached(line: string, grade: Grade, openQuotes: number): CachedLine {
+  const key = `${grade}|${openQuotes}|${line}`;
+  const hit = lineCache.get(key);
+  if (hit) return hit;
+  const unsupported = new Set<string>();
+  const quoteState = { open: openQuotes };
+  const entry = {
+    segments: translateLine(line, grade, unsupported, quoteState),
+    unsupported: [...unsupported],
+    openQuotesAfter: quoteState.open,
+  };
+  if (lineCache.size >= LINE_CACHE_LIMIT) lineCache.delete(lineCache.keys().next().value!);
+  lineCache.set(key, entry);
+  return entry;
+}
+
 /** Translate print text to Unicode braille. */
 export function translate(text: string, options: TranslateOptions = {}): TranslationResult {
   const grade = options.grade ?? 2;
   const unsupported = new Set<string>();
-  const quoteState = { open: 0 };
+  let openQuotes = 0;
   const lines = normalizeText(text)
     .split('\n')
     .map((line) => {
-      const segments = translateLine(line, grade, unsupported, quoteState);
-      return segments;
+      const result = translateLineCached(line, grade, openQuotes);
+      openQuotes = result.openQuotesAfter;
+      result.unsupported.forEach((ch) => unsupported.add(ch));
+      return result.segments;
     });
   const braille = lines.map((segments) => segments.map((s) => s.braille).join('')).join('\n');
   return { braille, lines, unsupported: [...unsupported] };

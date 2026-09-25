@@ -1,141 +1,93 @@
-import { Layout } from '@/components/Layout';
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from '@/components/ui/accordion';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { HelpCircle } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Layout, PageHeader } from '@/components/layout/Layout';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 
-
-
-const faqs = [
+const FAQS: { q: string; a: React.ReactNode }[] = [
   {
-    id: 'grade-difference',
-    question: 'What is the difference between Grade 1 and Grade 2 Braille?',
-    answer: `Grade 1 Braille (also called uncontracted Braille) represents each letter of the alphabet with a single Braille cell. It's a direct letter-by-letter translation and is often used for beginners learning Braille.
-
-Grade 2 Braille (contracted Braille) uses special symbols and contractions to represent common words and letter combinations. For example, "the" is represented by a single cell instead of three. Grade 2 is more compact and is the standard form used in most Braille publications.
-
-Both grades are valid and useful depending on the reader's familiarity with Braille.`,
+    q: 'What is the difference between grade 1 and grade 2 braille?',
+    a: (
+      <>
+        Grade 1 (uncontracted) braille spells every word letter by letter. Grade 2 (contracted) braille also uses about
+        180 contractions and short forms: &ldquo;the&rdquo; is one cell and &ldquo;knowledge&rdquo; is the single cell
+        ⠅. Grade 2 is what most adult braille readers use and takes around 20–30% less space. Grade 1 is common for
+        beginners and young learners.
+      </>
+    ),
   },
   {
-    id: 'file-formats',
-    question: 'Which file formats are supported?',
-    answer: `For upload, BrailleBridge accepts common image formats including JPEG, PNG, and image-based PDFs. These are the most common formats for photos taken with phones or cameras.
-
-For download, we offer three Braille file formats:
-• BRF (Braille Ready Format): The most widely supported format, compatible with most Braille embossers
-• DXP: A format used by specific embosser brands
-• Unicode Braille: A text format that displays Braille characters on screen, useful for digital viewing`,
+    q: 'Which braille code does BrailleBridge use?',
+    a: 'Unified English Braille (UEB), the standard for English braille in the United States, the United Kingdom, Canada, Australia, New Zealand, South Africa and many other countries.',
   },
   {
-    id: 'data-storage',
-    question: 'Is my data stored or saved?',
-    answer: `No. BrailleBridge does not permanently store your documents or converted files on our servers. 
-
-• Uploaded images are processed temporarily and then discarded
-• Your conversion history is stored only in your browser's local storage on your own device
-• We do not create accounts or track individual users
-• No document content is retained after your session ends
-
-Your privacy is respected. The tool is designed to process and return results without keeping copies of your materials.`,
+    q: 'Which file should I download for my embosser?',
+    a: (
+      <>
+        Choose <strong>BRF</strong> for almost any embosser, braille notetaker or braille display: it is the standard
+        braille file format. <strong>PEF</strong> is an open XML format that stores each page exactly; use it if your
+        embosser software supports it. Before exporting, set <em>cells per line</em> and <em>lines per page</em> to match
+        your paper. 40 × 25 is standard for 11.5 × 11 inch braille paper; check your embosser&rsquo;s settings for A4.
+      </>
+    ),
   },
   {
-    id: 'ocr-accuracy',
-    question: 'How accurate is OCR?',
-    answer: `OCR (Optical Character Recognition) accuracy depends on several factors:
-
-• Image quality: Clear, well-lit photos produce better results
-• Font type: Standard printed fonts are recognized more accurately than decorative or handwritten text
-• Document condition: Clean documents without wrinkles, stains, or heavy shadows work best
-
-For most printed documents with standard fonts, accuracy is high. However, we always recommend reviewing the extracted text before converting to Braille. The review step allows you to correct any errors.
-
-OCR is not perfect, especially with poor image quality, unusual fonts, or handwriting. For critical documents, professional transcription may be needed.`,
+    q: 'Can I read the braille on a refreshable braille display?',
+    a: 'Yes. Open the BRF file on your notetaker or braille display, or in your braille reading app. You can also copy the Unicode braille and paste it into a document.',
   },
   {
-    id: 'embossers-displays',
-    question: 'Can this work with Braille embossers and displays?',
-    answer: `Yes. The BRF and DXP file formats are designed to be compatible with Braille embossers, which are specialized printers that produce raised Braille dots on paper.
-
-Refreshable Braille displays can also use these files, depending on the display's software. Many displays can read BRF files directly or through compatible reading applications.
-
-If you use a specific embosser or display, check its documentation for supported file formats. BRF is the most universally compatible format.`,
+    q: 'Which files can I open?',
+    a: 'Photos (JPG, PNG, WebP), PDFs (both digital and scanned), Word documents (.docx), plain text and BRF files. You can also type or paste text directly.',
   },
   {
-    id: 'limitations',
-    question: 'What are the current limitations?',
-    answer: `BrailleBridge has several limitations to be aware of:
-
-• Images only: Currently, text-based PDFs (like exported Word documents) are not directly supported. You would need to take a screenshot or photo of the page.
-• Single images: Each conversion handles one image at a time. Multi-page documents require separate conversions.
-• English focus: The Braille translation is primarily designed for English text. Other languages may not translate correctly.
-• No formatting: Complex layouts, tables, and graphics are not preserved. Only the text content is converted.
-• Accuracy: As mentioned, OCR accuracy varies. This tool should not be used as the sole method for critical or official documents without review.
-
-This is a developing project, and improvements are ongoing.`,
+    q: 'Is my document private?',
+    a: (
+      <>
+        Typed text, PDFs, Word files and all translation stay in your browser. Photos and scanned PDFs are sent for text
+        recognition only while cloud recognition is on; switch it to &ldquo;This device only&rdquo; in the text
+        recognition settings and nothing leaves your device. See <Link to="/about">About</Link> for details.
+      </>
+    ),
   },
   {
-    id: 'free-to-use',
-    question: 'Is BrailleBridge free to use?',
-    answer: `Yes. BrailleBridge is provided free of charge as an educational and social-impact project. There are no premium features, subscriptions, or hidden costs.
-
-The tool is maintained as a non-commercial project with the goal of improving accessibility to printed materials.`,
+    q: 'How accurate is the braille?',
+    a: 'The translator matches liblouis, the braille engine used by major screen readers, on 99.9% of 7,000 test words. Text recognition from photos can make mistakes, so read through the recognised text before you export. For exams or legal documents, have the braille checked by a certified transcriber.',
+  },
+  {
+    q: 'Can it turn braille back into print?',
+    a: (
+      <>
+        Yes. The <Link to="/read">Read braille</Link> page back-translates Unicode braille or BRF files, and has a
+        Perkins-style keyboard for typing braille with the S, D, F, J, K and L keys.
+      </>
+    ),
+  },
+  {
+    q: 'Does it work offline?',
+    a: 'Once the page has loaded, translation and export work without a connection. On-device text recognition downloads its English model the first time you use it.',
+  },
+  {
+    q: 'Does it support maths, music or other languages?',
+    a: 'Not yet. BrailleBridge currently handles English literary text in UEB. Maths notation and other languages are planned.',
   },
 ];
 
 export default function FAQ() {
   return (
     <Layout>
-      <div className="container mx-auto px-4 py-12 max-w-4xl">
-        <div className="space-y-8">
-          {/* Page header */}
-          <div className="text-center space-y-4">
-            <h1 className="text-3xl md:text-4xl font-bold">Frequently Asked Questions</h1>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Common questions about using BrailleBridge and understanding Braille conversion.
-            </p>
-          </div>
-
-          {/* FAQ Accordion */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-3">
-                <HelpCircle className="w-6 h-6 text-primary" aria-hidden="true" />
-                Questions & Answers
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Accordion type="single" collapsible className="w-full">
-                {faqs.map((faq) => (
-                  <AccordionItem key={faq.id} value={faq.id}>
-                    <AccordionTrigger className="text-left">
-                      {faq.question}
-                    </AccordionTrigger>
-                    <AccordionContent className="text-muted-foreground whitespace-pre-line">
-                      {faq.answer}
-                    </AccordionContent>
-                  </AccordionItem>
-                ))}
-              </Accordion>
-            </CardContent>
-          </Card>
-
-          {/* Contact note */}
-          <Card className="border-primary/30 bg-primary/5">
-            <CardContent className="pt-6">
-              <p className="text-muted-foreground">
-                Have a question that's not answered here? Visit our{' '}
-                <a href="/reviews" className="text-primary underline hover:no-underline">
-                  Reviews & Feedback
-                </a>{' '}
-                page to share your thoughts or questions.
-              </p>
-            </CardContent>
-          </Card>
-        </div>
+      <div className="container max-w-3xl py-10">
+        <PageHeader eyebrow="Help" title="Frequently asked questions" />
+        <Accordion type="multiple" className="rounded-xl border bg-card px-5">
+          {FAQS.map((item, i) => (
+            <AccordionItem key={item.q} value={`q${i}`} className={i === FAQS.length - 1 ? 'border-b-0' : ''}>
+              <AccordionTrigger headingLevel={2} className="py-5 text-left text-[1rem] font-semibold hover:no-underline">
+                {item.q}
+              </AccordionTrigger>
+              <AccordionContent className="pb-5 text-[0.95rem] leading-relaxed text-muted-foreground">{item.a}</AccordionContent>
+            </AccordionItem>
+          ))}
+        </Accordion>
+        <p className="mt-8 text-muted-foreground">
+          Another question? <Link to="/feedback" className="font-semibold text-primary underline underline-offset-4">Send feedback</Link>.
+        </p>
       </div>
     </Layout>
   );

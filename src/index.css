@@ -1,215 +1,111 @@
+@import '@fontsource-variable/atkinson-hyperlegible-next';
+@import '@fontsource/noto-sans-symbols-2/braille-400.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* BrailleBridge Design System - Accessibility First */
-/* All colors in HSL for consistency */
-
+/*
+ * BrailleBridge design tokens (HSL). Three themes:
+ *  - light: warm paper background, ink-blue actions
+ *  - dark: deep navy with gold accents (the braille dot colour)
+ *  - high-contrast: pure black, white and yellow for low-vision users
+ * Every text colour meets WCAG AA (4.5:1) against its background.
+ */
 @layer base {
-  :root {
-    /* Core palette - High contrast dark theme for accessibility */
-    --background: 220 20% 10%;
-    --foreground: 45 100% 96%;
+  :root,
+  .light {
+    --background: 40 25% 97%;
+    --foreground: 224 32% 11%;
+    --card: 0 0% 100%;
+    --card-foreground: 224 32% 11%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 224 32% 11%;
+    --primary: 226 64% 33%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 40 20% 92%;
+    --secondary-foreground: 224 32% 14%;
+    --muted: 40 18% 93%;
+    --muted-foreground: 224 12% 36%;
+    --accent: 42 96% 52%;
+    --accent-foreground: 224 32% 11%;
+    --destructive: 0 72% 42%;
+    --destructive-foreground: 0 0% 100%;
+    --success: 152 62% 28%;
+    --success-foreground: 0 0% 100%;
+    --warning: 32 92% 34%;
+    --warning-foreground: 0 0% 100%;
+    --border: 40 14% 85%;
+    --input: 40 12% 78%;
+    --ring: 226 64% 42%;
+    --radius: 0.875rem;
 
-    --card: 220 18% 14%;
-    --card-foreground: 45 100% 96%;
-
-    --popover: 220 18% 14%;
-    --popover-foreground: 45 100% 96%;
-
-    /* Golden yellow - universally recognized for accessibility */
-    --primary: 45 100% 51%;
-    --primary-foreground: 220 20% 10%;
-
-    --secondary: 220 15% 20%;
-    --secondary-foreground: 45 100% 96%;
-
-    --muted: 220 15% 18%;
-    --muted-foreground: 220 10% 60%;
-
-    --accent: 45 100% 51%;
-    --accent-foreground: 220 20% 10%;
-
-    --destructive: 0 72% 51%;
-    --destructive-foreground: 45 100% 96%;
-
-    --border: 220 15% 25%;
-    --input: 220 15% 20%;
-    --ring: 45 100% 51%;
-
-    --radius: 0.75rem;
-
-    /* Custom tokens for BrailleBridge */
-    --success: 142 76% 36%;
-    --success-foreground: 45 100% 96%;
-    
-    --warning: 38 92% 50%;
-    --warning-foreground: 220 20% 10%;
-    
-    --info: 199 89% 48%;
-    --info-foreground: 45 100% 96%;
-
-    /* Focus ring for accessibility */
-    --focus-ring: 45 100% 51%;
-    --focus-ring-offset: 220 20% 10%;
-
-    /* Braille dot colors */
-    --braille-dot: 45 100% 51%;
-    --braille-dot-inactive: 220 15% 30%;
-    --braille-bg: 220 18% 12%;
-
-    /* Step indicator */
-    --step-active: 45 100% 51%;
-    --step-complete: 142 76% 36%;
-    --step-inactive: 220 15% 30%;
-
-    --sidebar-background: 220 18% 12%;
-    --sidebar-foreground: 45 100% 96%;
-    --sidebar-primary: 45 100% 51%;
-    --sidebar-primary-foreground: 220 20% 10%;
-    --sidebar-accent: 220 15% 20%;
-    --sidebar-accent-foreground: 45 100% 96%;
-    --sidebar-border: 220 15% 25%;
-    --sidebar-ring: 45 100% 51%;
+    --braille-dot: 226 64% 33%;
+    --braille-dot-empty: 40 12% 86%;
+    --braille-surface: 40 30% 95%;
+    --highlight: 42 96% 52%;
   }
 
   .dark {
-    /* Same as root - dark is default */
-    --background: 220 20% 10%;
-    --foreground: 45 100% 96%;
-    --card: 220 18% 14%;
-    --card-foreground: 45 100% 96%;
-    --popover: 220 18% 14%;
-    --popover-foreground: 45 100% 96%;
-    --primary: 45 100% 51%;
-    --primary-foreground: 220 20% 10%;
-    --secondary: 220 15% 20%;
-    --secondary-foreground: 45 100% 96%;
-    --muted: 220 15% 18%;
-    --muted-foreground: 220 10% 60%;
-    --accent: 45 100% 51%;
-    --accent-foreground: 220 20% 10%;
-    --destructive: 0 72% 51%;
-    --destructive-foreground: 45 100% 96%;
-    --border: 220 15% 25%;
-    --input: 220 15% 20%;
-    --ring: 45 100% 51%;
-    --sidebar-background: 220 18% 12%;
-    --sidebar-foreground: 45 100% 96%;
-    --sidebar-primary: 45 100% 51%;
-    --sidebar-primary-foreground: 220 20% 10%;
-    --sidebar-accent: 220 15% 20%;
-    --sidebar-accent-foreground: 45 100% 96%;
-    --sidebar-border: 220 15% 25%;
-    --sidebar-ring: 45 100% 51%;
+    --background: 224 30% 7%;
+    --foreground: 40 30% 95%;
+    --card: 224 26% 10.5%;
+    --card-foreground: 40 30% 95%;
+    --popover: 224 26% 12%;
+    --popover-foreground: 40 30% 95%;
+    --primary: 43 100% 60%;
+    --primary-foreground: 224 32% 8%;
+    --secondary: 224 20% 16%;
+    --secondary-foreground: 40 30% 95%;
+    --muted: 224 20% 14%;
+    --muted-foreground: 224 14% 72%;
+    --accent: 43 100% 60%;
+    --accent-foreground: 224 32% 8%;
+    --destructive: 0 80% 62%;
+    --destructive-foreground: 224 32% 8%;
+    --success: 150 55% 55%;
+    --success-foreground: 224 32% 8%;
+    --warning: 38 95% 60%;
+    --warning-foreground: 224 32% 8%;
+    --border: 224 18% 20%;
+    --input: 224 16% 26%;
+    --ring: 43 100% 60%;
 
-    /* Custom tokens */
-    --success: 142 76% 36%;
-    --success-foreground: 45 100% 96%;
-    --warning: 38 92% 50%;
-    --warning-foreground: 220 20% 10%;
-    --info: 199 89% 48%;
-    --info-foreground: 45 100% 96%;
-    --braille-dot: 45 100% 51%;
-    --braille-dot-inactive: 220 15% 30%;
-    --braille-bg: 220 18% 12%;
-    --step-active: 45 100% 51%;
-    --step-complete: 142 76% 36%;
-    --step-inactive: 220 15% 30%;
+    --braille-dot: 43 100% 62%;
+    --braille-dot-empty: 224 18% 22%;
+    --braille-surface: 224 28% 8.5%;
+    --highlight: 43 100% 60%;
   }
 
-  /* Light mode */
-  .light {
-    --background: 0 0% 100%;
-    --foreground: 220 20% 15%;
-    --card: 0 0% 98%;
-    --card-foreground: 220 20% 15%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 220 20% 15%;
-    --primary: 220 70% 45%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 220 15% 92%;
-    --secondary-foreground: 220 20% 15%;
-    --muted: 220 15% 95%;
-    --muted-foreground: 220 10% 40%;
-    --accent: 220 70% 45%;
-    --accent-foreground: 0 0% 100%;
-    --destructive: 0 72% 51%;
-    --destructive-foreground: 0 0% 100%;
-    --border: 220 15% 85%;
-    --input: 220 15% 90%;
-    --ring: 220 70% 45%;
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 220 20% 15%;
-    --sidebar-primary: 220 70% 45%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 220 15% 92%;
-    --sidebar-accent-foreground: 220 20% 15%;
-    --sidebar-border: 220 15% 85%;
-    --sidebar-ring: 220 70% 45%;
-
-    /* Custom tokens - light mode */
-    --success: 142 76% 30%;
-    --success-foreground: 0 0% 100%;
-    --warning: 38 92% 40%;
-    --warning-foreground: 0 0% 100%;
-    --info: 199 89% 40%;
-    --info-foreground: 0 0% 100%;
-    --focus-ring: 220 70% 45%;
-    --focus-ring-offset: 0 0% 100%;
-    --braille-dot: 220 70% 45%;
-    --braille-dot-inactive: 220 15% 80%;
-    --braille-bg: 220 15% 95%;
-    --step-active: 220 70% 45%;
-    --step-complete: 142 76% 30%;
-    --step-inactive: 220 15% 75%;
-  }
-
-  /* High contrast mode - yellow/black for low-vision users */
   .high-contrast {
     --background: 0 0% 0%;
     --foreground: 0 0% 100%;
-    --card: 0 0% 5%;
+    --card: 0 0% 0%;
     --card-foreground: 0 0% 100%;
-    --popover: 0 0% 5%;
+    --popover: 0 0% 0%;
     --popover-foreground: 0 0% 100%;
     --primary: 60 100% 50%;
     --primary-foreground: 0 0% 0%;
-    --secondary: 0 0% 15%;
+    --secondary: 0 0% 12%;
     --secondary-foreground: 0 0% 100%;
-    --muted: 0 0% 12%;
-    --muted-foreground: 0 0% 70%;
+    --muted: 0 0% 8%;
+    --muted-foreground: 0 0% 88%;
     --accent: 60 100% 50%;
     --accent-foreground: 0 0% 0%;
-    --destructive: 0 100% 50%;
-    --destructive-foreground: 0 0% 100%;
-    --border: 0 0% 40%;
-    --input: 0 0% 15%;
-    --ring: 60 100% 50%;
-    --sidebar-background: 0 0% 5%;
-    --sidebar-foreground: 0 0% 100%;
-    --sidebar-primary: 60 100% 50%;
-    --sidebar-primary-foreground: 0 0% 0%;
-    --sidebar-accent: 0 0% 15%;
-    --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 0 0% 40%;
-    --sidebar-ring: 60 100% 50%;
-
-    /* Custom tokens - high contrast */
-    --success: 120 100% 40%;
+    --destructive: 0 100% 65%;
+    --destructive-foreground: 0 0% 0%;
+    --success: 120 100% 50%;
     --success-foreground: 0 0% 0%;
-    --warning: 45 100% 50%;
+    --warning: 45 100% 55%;
     --warning-foreground: 0 0% 0%;
-    --info: 200 100% 50%;
-    --info-foreground: 0 0% 0%;
-    --focus-ring: 60 100% 50%;
-    --focus-ring-offset: 0 0% 0%;
+    --border: 0 0% 70%;
+    --input: 0 0% 80%;
+    --ring: 60 100% 50%;
+
     --braille-dot: 60 100% 50%;
-    --braille-dot-inactive: 0 0% 30%;
-    --braille-bg: 0 0% 8%;
-    --step-active: 60 100% 50%;
-    --step-complete: 120 100% 40%;
-    --step-inactive: 0 0% 35%;
+    --braille-dot-empty: 0 0% 25%;
+    --braille-surface: 0 0% 0%;
+    --highlight: 60 100% 50%;
   }
 }
 
@@ -218,178 +114,108 @@
     @apply border-border;
   }
 
+  html {
+    font-size: 112.5%; /* 18px base for readability */
+    -webkit-text-size-adjust: 100%;
+    scroll-padding-top: 5rem;
+  }
+
   body {
     @apply bg-background text-foreground antialiased;
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    font-size: 18px;
+    font-family: theme('fontFamily.sans');
     line-height: 1.6;
+    font-feature-settings: 'ss01';
   }
 
-  /* Enhanced focus styles for accessibility */
+  h1,
+  h2,
+  h3 {
+    @apply tracking-tight;
+    text-wrap: balance;
+  }
+
+  /* Visible, consistent focus for keyboard users. */
   :focus-visible {
-    @apply outline-none ring-4 ring-ring ring-offset-2 ring-offset-background;
+    @apply outline-none ring-[3px] ring-ring ring-offset-2 ring-offset-background;
   }
 
-  /* Skip to main content link */
-  .skip-link {
-    @apply absolute -top-12 left-4 z-50 bg-primary text-primary-foreground px-6 py-3 rounded-lg font-semibold;
-    @apply focus:top-4 transition-all duration-200;
+  .high-contrast :focus-visible {
+    outline: 3px solid hsl(var(--ring));
+    outline-offset: 3px;
   }
 
-  /* Ensure minimum touch target size */
-  button, a, input, select, textarea {
-    min-height: 48px;
-    min-width: 48px;
+  .high-contrast a {
+    @apply underline;
   }
 
-  input[type="checkbox"], input[type="radio"] {
-    min-height: 24px;
-    min-width: 24px;
+  /* Selected options must be obvious without relying on subtle shading. */
+  .high-contrast [role='radio'][data-state='on'] {
+    background-color: hsl(var(--primary));
+    color: hsl(var(--primary-foreground));
   }
 
-  /* Screen reader only content */
-  .sr-only {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    padding: 0;
-    margin: -1px;
-    overflow: hidden;
-    clip: rect(0, 0, 0, 0);
-    white-space: nowrap;
-    border: 0;
+  ::selection {
+    background: hsl(var(--highlight) / 0.45);
+    color: hsl(var(--foreground));
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
   }
 }
 
 @layer components {
-  /* Step indicator component */
-  .step-indicator {
-    @apply flex items-center gap-2;
+  .skip-link {
+    @apply fixed left-4 top-3 z-[100] -translate-y-24 rounded-lg bg-primary px-5 py-3 font-semibold text-primary-foreground shadow-lg transition-transform focus:translate-y-0;
   }
 
-  .step-dot {
-    @apply w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg transition-all duration-300;
+  /* Unicode braille text (copyable, selectable). */
+  .braille-text {
+    font-family: theme('fontFamily.braille');
+    font-feature-settings: normal;
+    line-height: 1.5;
+    letter-spacing: 0.04em;
+    word-break: break-word;
   }
 
-  .step-dot-active {
-    @apply bg-primary text-primary-foreground ring-4 ring-primary/30;
+  .surface-braille {
+    background-color: hsl(var(--braille-surface));
   }
 
-  .step-dot-complete {
-    background-color: hsl(var(--success));
-    @apply text-foreground;
+  /* A soft dotted backdrop used in the hero. */
+  .dot-grid {
+    background-image: radial-gradient(hsl(var(--foreground) / 0.07) 1.5px, transparent 1.5px);
+    background-size: 18px 18px;
   }
 
-  .step-dot-inactive {
-    background-color: hsl(var(--step-inactive));
-    @apply text-muted-foreground;
+  .high-contrast .dot-grid {
+    background-image: none;
   }
 
-  /* Braille preview cell */
-  .braille-cell {
-    @apply inline-grid gap-1 p-2 rounded;
-    grid-template-columns: repeat(2, 1fr);
-    grid-template-rows: repeat(3, 1fr);
-    background-color: hsl(var(--braille-bg));
+  .prose-page p {
+    @apply mb-4 leading-relaxed text-muted-foreground;
   }
 
-  .braille-dot {
-    @apply w-3 h-3 rounded-full transition-colors duration-200;
+  .prose-page h2 {
+    @apply mb-3 mt-10 text-2xl font-bold text-foreground;
   }
 
-  .braille-dot-active {
-    background-color: hsl(var(--braille-dot));
-    box-shadow: 0 0 8px hsl(var(--braille-dot) / 0.5);
+  .prose-page h3 {
+    @apply mb-2 mt-6 text-lg font-semibold text-foreground;
   }
 
-  .braille-dot-inactive {
-    background-color: hsl(var(--braille-dot-inactive));
+  .prose-page ul {
+    @apply mb-4 list-disc space-y-1.5 pl-6 text-muted-foreground;
   }
 
-  /* Upload zone */
-  .upload-zone {
-    @apply border-4 border-dashed border-border rounded-2xl p-12 text-center transition-all duration-300;
-    @apply hover:border-primary hover:bg-primary/5 cursor-pointer;
-    @apply focus-within:ring-4 focus-within:ring-ring focus-within:border-primary;
-  }
-
-  .upload-zone-active {
-    @apply border-primary bg-primary/10 scale-[1.02];
-  }
-
-  /* Processing animation */
-  @keyframes pulse-glow {
-    0%, 100% {
-      box-shadow: 0 0 0 0 hsl(var(--primary) / 0.4);
-    }
-    50% {
-      box-shadow: 0 0 0 20px hsl(var(--primary) / 0);
-    }
-  }
-
-  .processing-indicator {
-    animation: pulse-glow 2s ease-in-out infinite;
-  }
-
-  /* Card hover effect */
-  .card-interactive {
-    @apply transition-all duration-300;
-    @apply hover:border-primary/50 hover:shadow-lg hover:shadow-primary/10;
-  }
-}
-
-#lovable-badge {
-  display: none !important;
-  visibility: hidden !important;
-  pointer-events: none !important;
-}
-
-
-@layer utilities {
-  /* Text size utilities for accessibility */
-  .text-accessible-sm {
-    @apply text-base;
-  }
-  
-  .text-accessible-base {
-    @apply text-lg;
-  }
-  
-  .text-accessible-lg {
-    @apply text-xl;
-  }
-  
-  .text-accessible-xl {
-    @apply text-2xl;
-  }
-
-  /* Spacing for touch targets */
-  .touch-target {
-    @apply min-h-[48px] min-w-[48px];
-  }
-
-  /* Success/Warning/Info colors */
-  .bg-success {
-    background-color: hsl(var(--success));
-  }
-  
-  .text-success {
-    color: hsl(var(--success));
-  }
-
-  .bg-warning {
-    background-color: hsl(var(--warning));
-  }
-  
-  .text-warning {
-    color: hsl(var(--warning));
-  }
-
-  .bg-info {
-    background-color: hsl(var(--info));
-  }
-  
-  .text-info {
-    color: hsl(var(--info));
+  .prose-page a {
+    @apply font-medium text-primary underline underline-offset-4 hover:no-underline;
   }
 }

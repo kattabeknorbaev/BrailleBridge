@@ -15,6 +15,10 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  build: {
+    // pdf.js and mammoth are large but only load when a PDF or Word file is opened.
+    chunkSizeWarningLimit: 600,
+  },
   test: {
     environment: "node",
     include: ["src/**/*.test.ts"],

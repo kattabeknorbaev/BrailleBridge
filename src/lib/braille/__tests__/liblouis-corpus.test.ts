@@ -34,9 +34,6 @@ function modernise(print: string, expected: string): string | null {
   return print.includes('—') ? expected.replace(/⠐⠠⠤/g, '⠠⠤') : expected;
 }
 
-/** liblouis 3.1 does not start a capitals passage right after an opening quote. */
-const KNOWN_SENTENCE_DIFFERENCES = new Set(['“AND I ONLY AM ESCAPED ALONE TO TELL THEE” Job.']);
-
 describe('agreement with liblouis on common words', () => {
   it.each([
     ['grade 1', 1],
@@ -63,7 +60,6 @@ describe('agreement with liblouis on sentences', () => {
     let compared = 0;
     const mismatches: string[] = [];
     for (const row of sentences) {
-      if (KNOWN_SENTENCE_DIFFERENCES.has(row[0])) continue;
       const expected = modernise(row[0], row[grade]);
       if (expected === null) continue;
       compared++;

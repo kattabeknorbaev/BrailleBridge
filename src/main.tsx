@@ -1,15 +1,13 @@
-import { createRoot } from "react-dom/client";
-import App from "./App.tsx";
-import "./index.css";
+import { createRoot } from 'react-dom/client';
+import App from './App.tsx';
+import { applyTheme } from './hooks/useTheme';
+import './index.css';
 
+// An inline script in index.html sets the theme before first paint; this keeps it in sync.
+try {
+  applyTheme((localStorage.getItem('braillebridge:theme') as Parameters<typeof applyTheme>[0]) ?? 'system');
+} catch {
+  applyTheme('system');
+}
 
-const removeLovableBadge = () => {
-  const badge = document.getElementById("lovable-badge");
-  if (badge) badge.remove();
-};
-
-
-removeLovableBadge();
-setInterval(removeLovableBadge, 100);
-
-createRoot(document.getElementById("root")!).render(<App />);
+createRoot(document.getElementById('root')!).render(<App />);

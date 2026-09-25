@@ -1,177 +1,125 @@
-import { useEffect } from 'react';
-import { Layout } from '@/components/Layout';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Eye, Heart, Users, Target, AlertTriangle } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { FileText, Languages, Printer } from 'lucide-react';
+import { Layout, PageHeader, REPO_URL } from '@/components/layout/Layout';
+import { toBraille } from '@/lib/braille';
+
+const STEPS = [
+  {
+    icon: FileText,
+    title: 'Get the text',
+    body: 'Typed and pasted text is used as-is. Digital PDFs and Word files are read directly in your browser. Photos and scanned pages go through text recognition: a cloud vision model by default, or Tesseract running on your own device if you prefer privacy or the cloud is unavailable. Page-layout line breaks are joined back into paragraphs, and you can edit everything before exporting.',
+  },
+  {
+    icon: Languages,
+    title: 'Translate to braille',
+    body: 'A rule-based Unified English Braille translator marks capitals (letters, words and whole passages), numbers, punctuation and accents. In grade 2 it applies the rules for where each of the 180+ contractions may be used, then picks the combination that uses the fewest cells, the way experienced transcribers do.',
+  },
+  {
+    icon: Printer,
+    title: 'Format and export',
+    body: 'Text is laid out on braille pages (40 cells × 25 lines by default) with paragraph indents and braille page numbers, then saved as BRF for embossers and notetakers, PEF (an open embosser format), Unicode braille, or an interline print copy for sighted teachers.',
+  },
+];
 
 export default function About() {
-  useEffect(() => {
-    document.title = "About | BrailleBridge";
-  }, []);
-
+  const example = 'Knowledge is power.';
   return (
     <Layout>
-      <div className="container mx-auto px-4 py-12 max-w-4xl">
-        <div className="space-y-8">
-          {/* Page header */}
-          <div className="text-center space-y-4">
-            <h1 className="text-3xl md:text-4xl font-bold">About BrailleBridge</h1>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Bridging the gap between printed materials and Braille accessibility.
-            </p>
+      <article className="container max-w-3xl py-10">
+        <PageHeader
+          eyebrow="About"
+          title="Why BrailleBridge exists"
+          intro="Most printed material never becomes braille. Transcription software is expensive and hard to use with a screen reader, and many teachers, parents and braille readers just need a worksheet, letter or menu in braille today."
+        />
+
+        <div className="prose-page">
+          <p>
+            BrailleBridge is a free, open-source tool that turns print into braille in the browser. It is built for blind
+            and low-vision readers, for teachers of visually impaired students, and for anyone who needs to produce braille
+            without specialist software.
+          </p>
+
+          <div className="not-prose my-8 rounded-xl border bg-card p-5">
+            <p className="text-[0.85rem] font-semibold text-muted-foreground">The same sentence, three ways</p>
+            <dl className="mt-3 space-y-3">
+              <div>
+                <dt className="text-[0.8rem] text-muted-foreground">Print</dt>
+                <dd className="text-lg">{example}</dd>
+              </div>
+              <div>
+                <dt className="text-[0.8rem] text-muted-foreground">Grade 1 (every letter spelled out)</dt>
+                <dd className="braille-text text-[1.6rem]">{toBraille(example, 1)}</dd>
+              </div>
+              <div>
+                <dt className="text-[0.8rem] text-muted-foreground">Grade 2 (contracted, used by most adult readers)</dt>
+                <dd className="braille-text text-[1.6rem]">{toBraille(example, 2)}</dd>
+              </div>
+            </dl>
           </div>
 
-          {/* The Problem */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-3">
-                <Target className="w-6 h-6 text-primary" aria-hidden="true" />
-                The Problem We Address
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4 text-muted-foreground">
-              <p>
-                Millions of printed documents—books, worksheets, forms, and notes—remain 
-                inaccessible to blind and visually impaired readers. Converting these 
-                materials to Braille often requires expensive software, specialized 
-                training, or professional transcription services.
-              </p>
-              <p>
-                This creates a significant barrier for students, educators, and 
-                individuals who need quick access to printed information in a format 
-                they can read independently.
-              </p>
-            </CardContent>
-          </Card>
-
-          {/* Why BrailleBridge */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-3">
-                <Eye className="w-6 h-6 text-primary" aria-hidden="true" />
-                Why BrailleBridge Exists
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4 text-muted-foreground">
-              <p>
-                BrailleBridge was built to provide a simple, free tool that helps 
-                convert printed documents to Braille-ready files. The goal is to 
-                reduce the time and effort needed to make materials accessible.
-              </p>
-              <p>
-                By combining optical character recognition (OCR) with Braille 
-                translation, BrailleBridge allows users to:
-              </p>
-              <ul className="list-disc pl-6 space-y-2">
-                <li>Take a photo of a document and extract the text automatically</li>
-                <li>Review and edit the extracted text before conversion</li>
-                <li>Choose between Grade 1 and Grade 2 Braille</li>
-                <li>Download files compatible with Braille embossers and displays</li>
-              </ul>
-            </CardContent>
-          </Card>
-
-          {/* Current Limitations */}
-          <Card className="border-warning/30 bg-warning/5">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-3">
-                <AlertTriangle className="w-6 h-6 text-warning" aria-hidden="true" />
-                Current Limitations (v1.1)
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4 text-muted-foreground">
-              <p>
-                We believe in being transparent about what BrailleBridge can and cannot do. 
-                Here are the current limitations of this version:
-              </p>
-              
-              <div className="space-y-4">
-                <div>
-                  <h4 className="font-semibold text-foreground mb-2">Unsupported Content Types</h4>
-                  <ul className="list-disc pl-6 space-y-1">
-                    <li>Mathematical equations and formulas (Nemeth Code not yet supported)</li>
-                    <li>Music notation (Music Braille not yet supported)</li>
-                    <li>Complex tables and multi-column layouts may not preserve structure</li>
-                    <li>Handwritten text recognition is limited</li>
-                    <li>Languages other than English are not currently supported</li>
-                  </ul>
-                </div>
-
-                <div>
-                  <h4 className="font-semibold text-foreground mb-2">OCR Accuracy Depends On</h4>
-                  <ul className="list-disc pl-6 space-y-1">
-                    <li>Image quality and resolution (higher is better)</li>
-                    <li>Lighting conditions when photographing documents</li>
-                    <li>Print clarity and font legibility</li>
-                    <li>Document condition (creases, stains may affect results)</li>
-                  </ul>
-                </div>
-
-                <div>
-                  <h4 className="font-semibold text-foreground mb-2">Scope Boundaries</h4>
-                  <ul className="list-disc pl-6 space-y-1">
-                    <li>This tool is designed for personal and educational use</li>
-                    <li>Not intended to replace professional Braille transcription for critical materials</li>
-                    <li>Output should be reviewed before use in formal educational settings</li>
-                    <li>File size limited to 20MB per upload</li>
-                  </ul>
-                </div>
-              </div>
-
-              <p className="text-sm italic">
-                We are actively working to improve these areas in future versions. 
-                Your feedback helps us prioritize what to address next.
-              </p>
-            </CardContent>
-          </Card>
-
-          {/* Accessibility-First Design */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-3">
-                <Users className="w-6 h-6 text-primary" aria-hidden="true" />
-                Accessibility-First Design
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4 text-muted-foreground">
-              <p>
-                BrailleBridge is designed with accessibility as the primary 
-                consideration, not an afterthought. Every feature has been built 
-                with blind and low-vision users in mind:
-              </p>
-              <ul className="list-disc pl-6 space-y-2">
-                <li>Full keyboard navigation throughout the application</li>
-                <li>Screen reader support with proper ARIA labels and landmarks</li>
-                <li>High-contrast display mode for low-vision users</li>
-                <li>Clear, plain-language error messages and instructions</li>
-                <li>Large touch targets and readable text sizes</li>
-              </ul>
-            </CardContent>
-          </Card>
-
-          {/* Project Note */}
-          <Card className="border-primary/30 bg-primary/5">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-3">
-                <Heart className="w-6 h-6 text-primary" aria-hidden="true" />
-                About This Project
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="text-muted-foreground">
-              <p>
-                BrailleBridge was built as an educational and social-impact project. 
-                It is not a commercial product. The tool is provided free of charge 
-                with the hope that it can help improve access to printed materials 
-                for those who need Braille.
-              </p>
-              <p className="mt-4">
-                We acknowledge that this is a developing tool with limitations. 
-                Professional Braille transcription services remain important for 
-                critical materials that require certified accuracy.
-              </p>
-            </CardContent>
-          </Card>
+          <h2>How it works</h2>
         </div>
-      </div>
+
+        <ol className="mt-4 space-y-4">
+          {STEPS.map(({ icon: Icon, title, body }, i) => (
+            <li key={title} className="flex gap-4 rounded-xl border bg-card p-5">
+              <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground">
+                <Icon className="size-5" aria-hidden="true" />
+              </span>
+              <div>
+                <h3 className="font-bold">
+                  {i + 1}. {title}
+                </h3>
+                <p className="mt-1 text-muted-foreground">{body}</p>
+              </div>
+            </li>
+          ))}
+        </ol>
+
+        <div className="prose-page">
+          <h2>How accurate is it?</h2>
+          <p>
+            The translator is tested against <a href="https://liblouis.io">liblouis</a>, the open-source braille
+            translator used by screen readers such as NVDA and JAWS. On a test set of 7,000 common English words from
+            public-domain books, BrailleBridge produces the same grade 2 braille for 99.9% of them, and the same grade 1
+            braille for all of them. Every difference is reviewed and documented in the source code, and the whole test
+            set runs automatically on every change.
+          </p>
+          <p>
+            Text recognition is less certain than translation: photos can be misread. Always check the recognised text
+            before you emboss, and use a certified transcriber for exams, legal documents and anything where every
+            character matters.
+          </p>
+
+          <h2>Current limitations</h2>
+          <ul>
+            <li>English only (Unified English Braille). Other languages and codes are not supported yet.</li>
+            <li>No mathematics or science notation, music braille or tactile graphics.</li>
+            <li>Tables and multi-column layouts are read as plain text.</li>
+            <li>Bold, italics and headings are not marked in braille yet.</li>
+            <li>
+              A small number of words need a transcriber&rsquo;s judgement (for example compound words where a contraction
+              should not bridge the two parts). Known cases are handled with an exception list.
+            </li>
+          </ul>
+
+          <h2>Privacy</h2>
+          <p>
+            Typing, translation, PDF and Word import, and exporting all happen in your browser; nothing is uploaded. Only
+            photos and scanned PDFs are sent to the cloud for text recognition, and only when cloud recognition is turned
+            on (it can be switched to on-device in the text recognition settings). Recent documents are saved in your
+            browser only and can be cleared at any time. The site counts page visits with Vercel Analytics and Google
+            Analytics; these never see the text of your documents.
+          </p>
+
+          <h2>Who made this</h2>
+          <p>
+            BrailleBridge is built by Kattabek Norbaev as an open-source, non-commercial project. The code, including the
+            translation rules and tests, is on <a href={REPO_URL}>GitHub</a>. Suggestions and corrections from braille
+            readers and transcribers are very welcome through the <Link to="/feedback">feedback form</Link>.
+          </p>
+        </div>
+      </article>
     </Layout>
   );
 }

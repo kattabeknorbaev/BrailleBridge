@@ -170,6 +170,16 @@ describe('text handling', () => {
     expect(result.unsupported).toEqual(['\u{1F600}', '你']);
   });
 
+  it('gives identical results from the line cache, including warnings', () => {
+    const text = 'cached line \u{1F600}\n‘open quote\nclosed’ here';
+    const first = translate(text, { grade: 2 });
+    const second = translate(text, { grade: 2 });
+    expect(second).toEqual(first);
+    expect(second.unsupported).toEqual(['\u{1F600}']);
+    // The open quote carries to the next line, so its closing mark is a quote, not an apostrophe.
+    expect(second.lines[2][0].braille.endsWith('⠠⠴')).toBe(true);
+  });
+
   it('returns print/braille pairs for each word', () => {
     const result = translate('The cat', { grade: 2 });
     expect(result.lines[0]).toEqual([

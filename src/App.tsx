@@ -1,61 +1,76 @@
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
-import { Analytics } from "@vercel/analytics/react";
-import { useEffect } from "react";
-import Index from "./pages/Index";
-import About from "./pages/About";
-import HowItWorks from "./pages/HowItWorks";
-import FAQ from "./pages/FAQ";
-import Reviews from "./pages/Reviews";
-import Accessibility from "./pages/Accessibility";
-import NotFound from "./pages/NotFound";
+import { lazy, Suspense, useEffect, useRef } from 'react';
+import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom';
+import { Analytics } from '@vercel/analytics/react';
+import { Toaster } from '@/components/ui/sonner';
+import Convert from './pages/Convert';
 
-const queryClient = new QueryClient();
+const Read = lazy(() => import('./pages/Read'));
+const Learn = lazy(() => import('./pages/Learn'));
+const About = lazy(() => import('./pages/About'));
+const FAQ = lazy(() => import('./pages/FAQ'));
+const Accessibility = lazy(() => import('./pages/Accessibility'));
+const Feedback = lazy(() => import('./pages/Feedback'));
+const NotFound = lazy(() => import('./pages/NotFound'));
 
-function AppRoutes() {
-  const location = useLocation();
+const TITLES: Record<string, string> = {
+  '/': 'BrailleBridge — Convert text, PDFs and photos to braille',
+  '/read': 'Read braille — BrailleBridge',
+  '/learn': 'Learn Unified English Braille — BrailleBridge',
+  '/about': 'About — BrailleBridge',
+  '/faq': 'FAQ — BrailleBridge',
+  '/accessibility': 'Accessibility — BrailleBridge',
+  '/feedback': 'Feedback — BrailleBridge',
+};
+
+/** Title, scroll position and focus on navigation, so screen readers hear the new page. */
+function RouteEffects() {
+  const { pathname } = useLocation();
+  const first = useRef(true);
 
   useEffect(() => {
-    const titles: Record<string, string> = {
-      "/": "BrailleBridge | Convert Documents to Braille",
-      "/about": "About | BrailleBridge",
-      "/how-it-works": "How It Works | BrailleBridge",
-      "/faq": "FAQ | BrailleBridge",
-      "/reviews": "Reviews | BrailleBridge",
-      "/accessibility": "Accessibility | BrailleBridge",
-    };
+    document.title = TITLES[pathname] ?? 'Page not found — BrailleBridge';
+    if (first.current) {
+      first.current = false;
+      return;
+    }
+    window.scrollTo(0, 0);
+    // Wait for lazy pages to render, then focus the main region.
+    const id = window.setTimeout(() => document.getElementById('main')?.focus({ preventScroll: true }), 50);
+    return () => window.clearTimeout(id);
+  }, [pathname]);
 
-    document.title = titles[location.pathname] || "BrailleBridge";
-  }, [location.pathname]);
-
-  return (
-    <Routes>
-      <Route path="/" element={<Index />} />
-      <Route path="/about" element={<About />} />
-      <Route path="/how-it-works" element={<HowItWorks />} />
-      <Route path="/faq" element={<FAQ />} />
-      <Route path="/reviews" element={<Reviews />} />
-      <Route path="/accessibility" element={<Accessibility />} />
-      {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-      <Route path="*" element={<NotFound />} />
-    </Routes>
-  );
+  return null;
 }
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <AppRoutes />
-      </BrowserRouter>
-      <Analytics />
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+function PageFallback() {
+  return <div className="min-h-screen" aria-busy="true" />;
+}
 
-export default App;
+export default function App() {
+  return (
+    <>
+      <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+        <RouteEffects />
+        <Suspense fallback={<PageFallback />}>
+          <Routes>
+            <Route path="/" element={<Convert />} />
+            <Route path="/read" element={<Read />} />
+            <Route path="/learn" element={<Learn />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/faq" element={<FAQ />} />
+            <Route path="/accessibility" element={<Accessibility />} />
+            <Route path="/feedback" element={<Feedback />} />
+            {/* Addresses from earlier versions of the site */}
+            <Route path="/how-it-works" element={<Navigate to="/about" replace />} />
+            <Route path="/reviews" element={<Navigate to="/feedback" replace />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </Suspense>
+      </BrowserRouter>
+      <Toaster />
+      {/* Polite announcements for screen readers (see lib/audio-feedback). */}
+      <div id="sr-announcer" className="sr-only" role="status" aria-live="polite" aria-atomic="true" />
+      <Analytics />
+    </>
+  );
+}

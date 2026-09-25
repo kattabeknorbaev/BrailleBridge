@@ -5,23 +5,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     
     <!-- Primary Meta Tags -->
-    <title>BrailleBridge | Free Document to Braille Converter</title>
-    <meta name="title" content="BrailleBridge | Free Document to Braille Converter" />
-    <meta name="description" content="Convert photos and documents to Braille-ready formats (BRF, DXP) for embossers and tactile displays. Free, accessible tool supporting Grade 1 and Grade 2 Braille." />
-    <meta name="keywords" content="braille converter, document to braille, OCR braille, BRF file, braille embosser, accessibility tool, blind accessibility, visual impairment, braille translation, tactile reading" />
+    <title>BrailleBridge — Convert text, PDFs and photos to braille</title>
+    <meta name="title" content="BrailleBridge — Convert text, PDFs and photos to braille" />
+    <meta name="description" content="Free, open-source converter from print to Unified English Braille (grade 1 and 2). Open PDFs, Word files or photos and download BRF or PEF files for embossers and braille displays." />
+    <meta name="keywords" content="braille converter, braille translator, unified english braille, UEB, grade 2 braille, BRF, PEF, braille embosser, OCR to braille, back-translation, accessibility" />
     <meta name="author" content="Kattabek Norbaev" />
     <meta name="robots" content="index, follow" />
     <meta name="language" content="English" />
-    <meta name="revisit-after" content="7 days" />
-    
+        
     <!-- Canonical URL -->
     <link rel="canonical" href="https://bridgebraille.lovable.app/" />
     
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://bridgebraille.lovable.app/" />
-    <meta property="og:title" content="BrailleBridge | Free Document to Braille Converter" />
-    <meta property="og:description" content="Convert photos and documents to Braille-ready formats for embossers and tactile displays. Supports Grade 1 and Grade 2 Braille with accessibility-first design." />
+    <meta property="og:title" content="BrailleBridge — Convert text, PDFs and photos to braille" />
+    <meta property="og:description" content="Free, open-source print-to-braille converter. Unified English Braille grade 1 and 2, BRF and PEF export, built for screen readers and keyboards." />
     <meta property="og:image" content="https://bridgebraille.lovable.app/og-image.png" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
@@ -32,20 +31,31 @@
     <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:url" content="https://bridgebraille.lovable.app/" />
-    <meta name="twitter:title" content="BrailleBridge | Free Document to Braille Converter" />
-    <meta name="twitter:description" content="Convert photos and documents to Braille-ready formats. Free accessibility tool supporting Grade 1 and Grade 2 Braille." />
+    <meta name="twitter:title" content="BrailleBridge — Convert text, PDFs and photos to braille" />
+    <meta name="twitter:description" content="Free, open-source print-to-braille converter: UEB grade 1 and 2, BRF and PEF export." />
     <meta name="twitter:image" content="https://bridgebraille.lovable.app/og-image.png" />
     <meta name="twitter:image:alt" content="BrailleBridge - Convert documents to Braille" />
-    <meta name="twitter:site" content="@BrailleBridge" />
-    <meta name="twitter:creator" content="@BrailleBridge" />
-    
+        
     <!-- Favicon -->
-    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
-    <link rel="apple-touch-icon" sizes="180x180" href="/favicon.ico" />
-    
-    <!-- Theme Color -->
-    <meta name="theme-color" content="#1a1f2e" />
-    <meta name="msapplication-TileColor" content="#1a1f2e" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="alternate icon" type="image/x-icon" href="/favicon.ico" />
+
+    <meta name="theme-color" content="#f9f8f4" />
+
+    <!-- Apply the saved or system theme before first paint (no flash). -->
+    <script>
+      (function () {
+        try {
+          var pref = localStorage.getItem('braillebridge:theme') || 'system';
+          var mq = function (q) { return window.matchMedia(q).matches; };
+          var theme = pref !== 'system' ? pref
+            : (mq('(prefers-contrast: more)') || mq('(forced-colors: active)')) ? 'high-contrast'
+            : mq('(prefers-color-scheme: dark)') ? 'dark' : 'light';
+          document.documentElement.classList.add(theme);
+          if (theme === 'high-contrast') document.documentElement.classList.add('dark');
+        } catch (e) {}
+      })();
+    </script>
     
     <!-- Structured Data - WebApplication -->
     <script type="application/ld+json">
@@ -53,7 +63,7 @@
       "@context": "https://schema.org",
       "@type": "WebApplication",
       "name": "BrailleBridge",
-      "description": "Free online tool to convert photos and documents to Braille-ready formats (BRF, DXP) for embossers and tactile displays.",
+      "description": "Free, open-source tool that converts text, PDFs, Word documents and photos into Unified English Braille and exports BRF and PEF files for embossers and braille displays.",
       "url": "https://bridgebraille.lovable.app",
       "applicationCategory": "UtilityApplication",
       "operatingSystem": "Web Browser",
@@ -66,13 +76,13 @@
         "OCR text extraction from images",
         "Grade 1 (Uncontracted) Braille conversion",
         "Grade 2 (Contracted) Braille conversion",
-        "BRF file export for embossers",
-        "DXP file export",
-        "Unicode Braille text export",
-        "Accessibility-first design"
+        "BRF and PEF export for embossers and braille displays",
+        "Braille to print back-translation",
+        "On-device OCR and PDF text extraction",
+        "Interline print copies for teachers"
       ],
       "screenshot": "https://bridgebraille.lovable.app/og-image.png",
-      "softwareVersion": "1.1",
+      "softwareVersion": "2.0",
       "author": {
         "@type": "Person",
         "name": "Kattabek Norbaev"
@@ -121,8 +131,8 @@
         {
           "@type": "ListItem",
           "position": 3,
-          "name": "How It Works",
-          "item": "https://bridgebraille.lovable.app/how-it-works"
+          "name": "Read braille",
+          "item": "https://bridgebraille.lovable.app/read"
         },
         {
           "@type": "ListItem",

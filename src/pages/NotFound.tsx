@@ -1,34 +1,24 @@
-import { useLocation, Link } from "react-router-dom";
-import { useEffect } from "react";
-import { Layout } from "@/components/Layout";
-import { Button } from "@/components/ui/button";
-import { Home } from "lucide-react";
+import { Link, useLocation } from 'react-router-dom';
+import { Layout } from '@/components/layout/Layout';
+import { Button } from '@/components/ui/button';
+import { toBraille } from '@/lib/braille';
 
-const NotFound = () => {
-  const location = useLocation();
-
-  useEffect(() => {
-    console.error("404 Error: User attempted to access non-existent route:", location.pathname);
-  }, [location.pathname]);
-
+export default function NotFound() {
+  const { pathname } = useLocation();
   return (
     <Layout>
-      <div className="flex flex-1 items-center justify-center py-20">
-        <div className="text-center space-y-6">
-          <h1 className="text-6xl font-bold text-primary">404</h1>
-          <p className="text-xl text-muted-foreground">
-            Oops! The page you're looking for doesn't exist.
-          </p>
-          <Button asChild size="lg" className="gap-2">
-            <Link to="/">
-              <Home className="w-5 h-5" aria-hidden="true" />
-              Return to Home
-            </Link>
-          </Button>
-        </div>
+      <div className="container flex max-w-xl flex-col items-center py-24 text-center">
+        <p className="braille-text text-[2.5rem] text-primary" aria-hidden="true">
+          {toBraille('404', 1)}
+        </p>
+        <h1 className="mt-4 text-3xl font-bold">Page not found</h1>
+        <p className="mt-3 text-muted-foreground">
+          There is no page at <code className="rounded bg-muted px-1.5 py-0.5">{pathname}</code>.
+        </p>
+        <Button asChild className="mt-8">
+          <Link to="/">Go to the converter</Link>
+        </Button>
       </div>
     </Layout>
   );
-};
-
-export default NotFound;
+}

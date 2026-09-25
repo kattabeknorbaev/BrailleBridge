@@ -96,7 +96,13 @@ const TERMINATOR_TAIL = '⠄';
 const HYPHEN = SYMBOLS['-'];
 
 /** Lower cells whose meaning depends on their position in the word (grade 2). */
-const POSITIONAL: Record<string, { begin?: string; middle?: string; end: string }> = {
+interface PositionalSign {
+  begin?: string;
+  middle?: string;
+  end: string;
+}
+
+const POSITIONAL: Record<string, PositionalSign> = {
   '⠆': { begin: 'be', middle: 'bb', end: ';' },
   '⠒': { begin: 'con', middle: 'cc', end: ':' },
   '⠲': { begin: 'dis', end: '.' },
@@ -107,7 +113,7 @@ const POSITIONAL: Record<string, { begin?: string; middle?: string; end: string 
   '⠴': { end: '”' },
 };
 /** The same cells in grade 1: punctuation only. */
-const GRADE1_POSITIONAL: Record<string, { begin?: string; end: string }> = {
+const GRADE1_POSITIONAL: Record<string, PositionalSign> = {
   '⠆': { end: ';' },
   '⠒': { end: ':' },
   '⠲': { end: '.' },
@@ -280,7 +286,7 @@ function decodeCells(input: string[], state: State, continuesWord = false): stri
         const text = positional.begin;
         if (/^[a-z]/.test(text)) emitLetters(text);
         else emitSymbol(text);
-      } else if (!atBegin && !atEnd && 'middle' in positional && positional.middle) {
+      } else if (!atBegin && !atEnd && positional.middle) {
         emitLetters(positional.middle);
       } else {
         emitSymbol(positional.end);
