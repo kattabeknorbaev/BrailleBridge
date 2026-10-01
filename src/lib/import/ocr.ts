@@ -9,7 +9,24 @@
  */
 import { getSupabase } from '@/integrations/supabase/client';
 
-export type Progress = (fraction: number, label: string) => void;
+/** What the importer is doing, for progress messages (the UI turns these into text). */
+export type ProgressStep =
+  | { kind: 'opening' }
+  | { kind: 'reading-pdf' }
+  | { kind: 'reading-word' }
+  | { kind: 'preparing-image' }
+  | { kind: 'preparing-scans' }
+  | { kind: 'cloud' }
+  | { kind: 'loading-ocr' }
+  | { kind: 'downloading-model' }
+  | { kind: 'reading-page'; page: number; total: number }
+  | { kind: 'done' };
+
+export type Progress = (fraction: number, step: ProgressStep) => void;
+
+/** Tesseract language codes: English, or Uzbek in both scripts. */
+export type OcrLanguage = 'eng' | 'uzb';
+const TESSERACT_LANGS: Record<OcrLanguage, string> = { eng: 'eng', uzb: 'uzb+uzb_cyrl' };
 
 /** Remove markdown fences or chatter a vision model sometimes adds. */
 function cleanModelOutput(text: string): string {
@@ -29,35 +46,43 @@ async function toBase64(blob: Blob): Promise<string> {
   return btoa(binary);
 }
 
-export class CloudOcrError extends Error {}
+export class CloudOcrError extends Error {
+  constructor(
+    readonly code: 'not-configured' | 'no-text' | 'failed',
+    detail?: string,
+  ) {
+    super(detail ?? code);
+  }
+}
 
 export async function recognizeInCloud(blob: Blob, mimeType: string, signal?: AbortSignal): Promise<string> {
   const supabase = await getSupabase();
-  if (!supabase) throw new CloudOcrError('Cloud text recognition is not configured.');
+  if (!supabase) throw new CloudOcrError('not-configured');
   const image = await toBase64(blob);
   if (signal?.aborted) throw new DOMException('Aborted', 'AbortError');
   const { data, error } = await supabase.functions.invoke('ocr', { body: { image, mimeType } });
-  if (error) throw new CloudOcrError(error.message || 'Cloud text recognition failed.');
+  if (error) throw new CloudOcrError('failed', error.message);
   const text = cleanModelOutput(String(data?.text ?? ''));
-  if (!text) throw new CloudOcrError('No text was found in the image.');
+  if (!text) throw new CloudOcrError('no-text');
   return text;
 }
 
 /** Recognise one or more images on this device with Tesseract.js. */
 export async function recognizeOnDevice(
   images: (Blob | HTMLCanvasElement)[],
+  language: OcrLanguage,
   onProgress?: Progress,
   signal?: AbortSignal,
 ): Promise<string> {
-  onProgress?.(0, 'Loading on-device text recognition…');
+  onProgress?.(0, { kind: 'loading-ocr' });
   const { createWorker } = await import('tesseract.js');
   let page = 0;
-  const worker = await createWorker('eng', 1, {
+  const worker = await createWorker(TESSERACT_LANGS[language], 1, {
     logger: (m) => {
       if (m.status === 'recognizing text') {
-        onProgress?.((page + m.progress) / images.length, `Reading page ${page + 1} of ${images.length}…`);
+        onProgress?.((page + m.progress) / images.length, { kind: 'reading-page', page: page + 1, total: images.length });
       } else if (m.status.startsWith('loading')) {
-        onProgress?.(0, 'Downloading the English recognition model (first time only)…');
+        onProgress?.(0, { kind: 'downloading-model' });
       }
     },
   });

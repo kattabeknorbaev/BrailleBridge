@@ -72,7 +72,13 @@ export function paginate(lines: Segment[][], layout: PageLayout = DEFAULT_LAYOUT
 
   let previousBlank = true;
   for (const segments of lines) {
-    const words = segments.map((s) => s.braille).filter((b) => b.trim().length > 0);
+    // Words are split where the braille has spaces (some codes drop the
+    // space after a comma, which joins two print words into one braille word).
+    const words = segments
+      .map((s) => s.braille)
+      .join('')
+      .split(/ +/)
+      .filter(Boolean);
     if (words.length === 0) {
       // Collapse runs of blank lines and never start a page with one.
       if (!previousBlank && page.length > 0 && page.length < height) pushLine('');

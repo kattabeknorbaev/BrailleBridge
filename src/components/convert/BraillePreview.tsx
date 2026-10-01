@@ -1,7 +1,8 @@
 import { useState, type CSSProperties } from 'react';
-import type { Page, PageLayout, TranslationResult } from '@/lib/braille';
+import type { Page, PageLayout, Segment, TranslationResult } from '@/lib/braille';
 import { BrailleCell } from '@/components/braille/BrailleCell';
 import { Button } from '@/components/ui/button';
+import { useMessages } from '@/i18n';
 
 export type PreviewView = 'braille' | 'dots' | 'interline' | 'pages';
 
@@ -17,16 +18,51 @@ const DOT_CELL_LIMIT = 1500;
 const INTERLINE_LINE_LIMIT = 200;
 const PAGE_LIMIT = 12;
 
-function ShowMore({ shown, total, unit, onClick }: { shown: number; total: number; unit: string; onClick: () => void }) {
+function ShowMore({
+  shown,
+  total,
+  unit,
+  onClick,
+}: {
+  shown: number;
+  total: number;
+  unit: 'cells' | 'lines' | 'pages';
+  onClick: () => void;
+}) {
+  const t = useMessages().convert.output;
   if (shown >= total) return null;
   return (
     <div className="mt-4 flex items-center justify-center gap-3 text-[0.85rem] text-muted-foreground">
-      Showing {shown.toLocaleString()} of {total.toLocaleString()} {unit}.
+      {t.showing(shown, total, unit)}
       <Button variant="outline" size="sm" onClick={onClick}>
-        Show all
+        {t.showAll}
       </Button>
     </div>
   );
+}
+
+/**
+ * Braille words as they appear in the output: print words joined where the
+ * braille code drops the space between them (Uzbek "non,sut").
+ */
+function brailleWords(segments: Segment[]): Segment[] {
+  const words: Segment[] = [];
+  let glue = false;
+  for (const segment of segments) {
+    if (!segment.print.trim()) {
+      glue = segment.braille === '';
+      continue;
+    }
+    const last = words[words.length - 1];
+    if (last && glue) {
+      last.print += ` ${segment.print}`;
+      last.braille += segment.braille;
+    } else {
+      words.push({ ...segment });
+    }
+    glue = false;
+  }
+  return words.filter((w) => w.braille);
 }
 
 function DotsView({ result, fontSize }: { result: TranslationResult; fontSize: number }) {
@@ -39,7 +75,7 @@ function DotsView({ result, fontSize }: { result: TranslationResult; fontSize: n
     <div>
       {result.lines.map((segments, li) => {
         if (budget <= 0) return null;
-        const words = segments.filter((s) => s.braille.trim());
+        const words = brailleWords(segments);
         if (words.length === 0) return <div key={li} className="h-4" />;
         return (
           <div key={li} className="mb-3 flex flex-wrap gap-x-4 gap-y-2">
@@ -95,6 +131,7 @@ function InterlineView({ result, fontSize }: { result: TranslationResult; fontSi
 }
 
 function PagesView({ pages, layout, fontSize }: { pages: Page[]; layout: PageLayout; fontSize: number }) {
+  const t = useMessages().convert.output;
   const [expanded, setExpanded] = useState(false);
   const visible = expanded ? pages : pages.slice(0, PAGE_LIMIT);
   const pageStyle: CSSProperties = { fontSize: Math.max(12, Math.round(fontSize * 0.6)) };
@@ -104,10 +141,10 @@ function PagesView({ pages, layout, fontSize }: { pages: Page[]; layout: PageLay
         {visible.map((page, i) => (
           <li key={i} className="rounded-lg border bg-card shadow-sm">
             <p className="rounded-t-lg border-b bg-muted/50 px-3 py-1.5 text-[0.75rem] font-semibold text-muted-foreground">
-              Page {i + 1} of {pages.length}
+              {t.pageOf(i + 1, pages.length)}
             </p>
             <div className="p-3">
-              <pre className="braille-text m-0 whitespace-pre" style={pageStyle} aria-label={`Braille page ${i + 1}`}>
+              <pre className="braille-text m-0 whitespace-pre" style={pageStyle} aria-label={t.pageAria(i + 1)}>
                 {page.map((line) => line.padEnd(layout.cellsPerLine, '⠀')).join('\n')}
               </pre>
             </div>

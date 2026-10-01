@@ -1,11 +1,11 @@
 import { useCallback, useSyncExternalStore } from 'react';
-import type { Grade } from '@/lib/braille';
+import type { BrailleCode } from '@/lib/braille';
 
 export interface HistoryEntry {
   id: string;
   title: string;
   date: string;
-  grade: Grade;
+  code: BrailleCode;
   format: 'brf' | 'pef' | 'txt' | 'print' | 'copy';
   /** The source text, so a past document can be reopened (kept on this device only). */
   text: string;
@@ -22,7 +22,12 @@ function load(): HistoryEntry[] {
   if (cache) return cache;
   try {
     const parsed = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? '[]');
-    cache = Array.isArray(parsed) ? parsed.filter((e) => e && typeof e.text === 'string') : [];
+    cache = Array.isArray(parsed)
+      ? parsed
+          .filter((e) => e && typeof e.text === 'string')
+          // Entries saved before Uzbek support recorded only the UEB grade.
+          .map((e) => (e.code ? e : { ...e, code: e.grade === 1 ? 'ueb1' : 'ueb2' }))
+      : [];
   } catch {
     cache = [];
   }
