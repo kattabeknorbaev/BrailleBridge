@@ -1,5 +1,5 @@
 import brailleFontUrl from '@fontsource/noto-sans-symbols-2/files/noto-sans-symbols-2-braille-400-normal.woff2?url';
-import type { Grade, Segment } from '@/lib/braille';
+import { cyrillicToLatin, type BrailleCode, type Segment } from '@/lib/braille';
 
 export function downloadFile(content: string | Blob, filename: string, mimeType: string) {
   const blob = content instanceof Blob ? content : new Blob([content], { type: mimeType });
@@ -14,10 +14,12 @@ export function downloadFile(content: string | Blob, filename: string, mimeType:
   window.setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
-/** "My Worksheet.pdf" → "my-worksheet-grade2.brf" */
-export function exportFilename(title: string, grade: Grade, extension: string): string {
+const CODE_SUFFIX: Record<BrailleCode, string> = { ueb2: 'grade2', ueb1: 'grade1', uz: 'uzbek' };
+
+/** "My Worksheet.pdf" → "my-worksheet-grade2.brf"; Cyrillic titles are transliterated first. */
+export function exportFilename(title: string, code: BrailleCode, extension: string): string {
   const base =
-    title
+    cyrillicToLatin(title)
       .replace(/\.[a-z0-9]{2,4}$/i, '')
       .normalize('NFKD')
       .replace(/[\u0300-\u036f]/g, '')
@@ -25,14 +27,14 @@ export function exportFilename(title: string, grade: Grade, extension: string): 
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/^-+|-+$/g, '')
       .slice(0, 60) || 'braille';
-  return `${base}-grade${grade}.${extension}`;
+  return `${base}-${CODE_SUFFIX[code]}.${extension}`;
 }
 
 /** Pick a document title from the first line of text. */
-export function titleFromText(text: string): string {
+export function titleFromText(text: string, fallback: string): string {
   const first = text.trim().split('\n')[0]?.trim() ?? '';
   const words = first.split(/\s+/).slice(0, 8).join(' ');
-  return words.length > 3 ? words.replace(/[.,:;!?]+$/, '') : 'Untitled document';
+  return words.length > 3 ? words.replace(/[.,:;!?]+$/, '') : fallback;
 }
 
 const escapeHtml = (s: string) =>
@@ -42,7 +44,7 @@ const escapeHtml = (s: string) =>
  * Print an interline copy: every print word above its braille. Teachers of
  * visually impaired students use this to read and check braille work.
  */
-export function printInterline(lines: Segment[][], title: string, grade: Grade) {
+export function printInterline(lines: Segment[][], title: string, subtitle: string, lang: string) {
   const body = lines
     .map((segments) => {
       const words = segments.filter((s) => s.print.trim());
@@ -53,7 +55,7 @@ export function printInterline(lines: Segment[][], title: string, grade: Grade) 
     })
     .join('');
 
-  const html = `<!doctype html><html lang="en"><head><meta charset="utf-8"><title>${escapeHtml(title)}</title>
+  const html = `<!doctype html><html lang="${escapeHtml(lang)}"><head><meta charset="utf-8"><title>${escapeHtml(title)}</title>
 <style>
 @font-face { font-family: 'BB Braille'; src: url('${new URL(brailleFontUrl, location.href).href}') format('woff2'); }
 @page { margin: 16mm; }
@@ -67,7 +69,7 @@ header p { font-size: 9pt; color: #444; margin: 0; }
 .print { font-size: 9pt; color: #333; }
 .braille { font-family: 'BB Braille', 'Segoe UI Symbol', 'Apple Braille', sans-serif; font-size: 20pt; line-height: 1.2; }
 </style></head><body>
-<header><h1>${escapeHtml(title)}</h1><p>Unified English Braille, grade ${grade} · interline print copy · made with BrailleBridge</p></header>
+<header><h1>${escapeHtml(title)}</h1><p>${escapeHtml(subtitle)}</p></header>
 ${body}
 </body></html>`;
 

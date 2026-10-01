@@ -6,11 +6,13 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { getSupabase } from '@/integrations/supabase/client';
 import { feedback as notify } from '@/lib/audio-feedback';
+import { rich, useMessages } from '@/i18n';
 
 const MAX_NAME = 80;
 const MAX_MESSAGE = 2000;
 
 export default function Feedback() {
+  const t = useMessages().feedback;
   const [name, setName] = useState('');
   const [message, setMessage] = useState('');
   const [website, setWebsite] = useState(''); // honeypot: hidden from people, filled by bots
@@ -22,7 +24,7 @@ export default function Feedback() {
   const submit = async (e: FormEvent) => {
     e.preventDefault();
     if (!message.trim()) {
-      toast.error('Please write your feedback first.');
+      toast.error(t.writeFirst);
       return;
     }
     if (website) {
@@ -33,7 +35,7 @@ export default function Feedback() {
     const supabase = await getSupabase();
     if (!supabase) {
       setStatus('idle');
-      toast.error('The feedback form is not available on this copy of BrailleBridge. Please use GitHub instead.');
+      toast.error(t.unavailable);
       return;
     }
     const { error } = await supabase
@@ -41,27 +43,23 @@ export default function Feedback() {
       .insert({ name: name.trim().slice(0, MAX_NAME) || null, feedback: message.trim().slice(0, MAX_MESSAGE) });
     if (error) {
       setStatus('idle');
-      notify('error', 'Your feedback could not be sent');
-      toast.error('Your feedback could not be sent. Please try again in a moment.');
+      notify('error', t.failedShort);
+      toast.error(t.failed);
       return;
     }
     setStatus('sent');
-    notify('success', 'Thank you. Your feedback was sent.');
+    notify('success', t.sentAnnounce);
   };
 
   return (
     <Layout>
       <div className="container max-w-2xl py-10">
-        <PageHeader
-          eyebrow="Feedback"
-          title="Help improve BrailleBridge"
-          intro="Braille readers, transcribers and teachers know best. Tell us about wrong braille, confusing screens, missing features or anything that did not work for you."
-        />
+        <PageHeader eyebrow={t.eyebrow} title={t.title} intro={t.intro} />
 
         {status === 'sent' ? (
           <div className="rounded-xl border bg-card p-6" role="status">
-            <h2 className="text-xl font-bold">Thank you!</h2>
-            <p className="mt-2 text-muted-foreground">Your feedback was sent. It is read by the developer and not shown publicly.</p>
+            <h2 className="text-xl font-bold">{t.sentTitle}</h2>
+            <p className="mt-2 text-muted-foreground">{t.sentBody}</p>
             <Button
               variant="outline"
               className="mt-4"
@@ -70,13 +68,13 @@ export default function Feedback() {
                 setStatus('idle');
               }}
             >
-              Send more feedback
+              {t.more}
             </Button>
           </div>
         ) : (
           <form onSubmit={submit} className="space-y-5 rounded-xl border bg-card p-6" noValidate>
             <div className="space-y-2">
-              <Label htmlFor={nameId}>Name (optional)</Label>
+              <Label htmlFor={nameId}>{t.name}</Label>
               <input
                 id={nameId}
                 value={name}
@@ -87,7 +85,7 @@ export default function Feedback() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor={messageId}>Your feedback</Label>
+              <Label htmlFor={messageId}>{t.message}</Label>
               <textarea
                 id={messageId}
                 value={message}
@@ -96,7 +94,7 @@ export default function Feedback() {
                 aria-describedby={countId}
                 onChange={(e) => setMessage(e.target.value)}
                 rows={7}
-                placeholder="For wrong braille, please include the print text and what you expected."
+                placeholder={t.placeholder}
                 className="w-full rounded-lg border border-input bg-background px-3 py-2 leading-relaxed placeholder:text-muted-foreground"
               />
               <p id={countId} className="text-right text-[0.8rem] text-muted-foreground">
@@ -111,18 +109,22 @@ export default function Feedback() {
             </div>
             <Button type="submit" disabled={status === 'sending'}>
               <Send aria-hidden="true" />
-              {status === 'sending' ? 'Sending…' : 'Send feedback'}
+              {status === 'sending' ? t.sending : t.send}
             </Button>
           </form>
         )}
 
         <p className="mt-8 flex items-center gap-2 text-muted-foreground">
-          <Github className="size-4" aria-hidden="true" />
-          Developers can also open an issue on{' '}
-          <a href={`${REPO_URL}/issues`} className="font-semibold text-primary underline underline-offset-4">
-            GitHub
-          </a>
-          .
+          <Github className="size-4 shrink-0" aria-hidden="true" />
+          <span>
+            {rich(t.github, {
+              github: (
+                <a href={`${REPO_URL}/issues`} className="font-semibold text-primary underline underline-offset-4">
+                  GitHub
+                </a>
+              ),
+            })}
+          </span>
         </p>
       </div>
     </Layout>

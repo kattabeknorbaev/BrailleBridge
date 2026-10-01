@@ -2,7 +2,8 @@ import { useCallback, useRef, useState, type KeyboardEvent } from 'react';
 import { CornerDownLeft, Delete, Space } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { BrailleCell } from '@/components/braille/BrailleCell';
-import { describeCell, dotsToCell } from '@/lib/braille';
+import { cellToDots, dotsToCell } from '@/lib/braille';
+import { useMessages } from '@/i18n';
 import { cn } from '@/lib/utils';
 
 /** Perkins brailler layout: F D S = dots 1 2 3, J K L = dots 4 5 6. */
@@ -21,6 +22,7 @@ interface PerkinsInputProps {
  * release them to type it. On touch screens, tap the dots, then "Add cell".
  */
 export function PerkinsInput({ onCell, onSpace, onNewline, onBackspace }: PerkinsInputProps) {
+  const t = useMessages().perkins;
   const [pressed, setPressed] = useState<Set<number>>(new Set());
   const chord = useRef<Set<number>>(new Set());
   const down = useRef<Set<string>>(new Set());
@@ -81,7 +83,7 @@ export function PerkinsInput({ onCell, onSpace, onNewline, onBackspace }: Perkin
         tabIndex={0}
         role="application"
         aria-roledescription="braille keyboard"
-        aria-label="Perkins-style braille keyboard. Hold F D S J K L together for dots 1 to 6, then release. Space, Enter and Backspace also work."
+        aria-label={t.keyboardLabel}
         onKeyDown={onKeyDown}
         onKeyUp={onKeyUp}
         onBlur={() => {
@@ -91,16 +93,16 @@ export function PerkinsInput({ onCell, onSpace, onNewline, onBackspace }: Perkin
         }}
         className="rounded-lg border-2 border-dashed border-input p-4 text-center transition-colors focus:border-primary focus:bg-primary/5 focus-visible:ring-0 focus-visible:ring-offset-0"
       >
-        <p className="text-[0.85rem] font-semibold">Click here, then type with your keyboard</p>
+        <p className="text-[0.85rem] font-semibold">{t.clickHere}</p>
         <p className="mt-1 text-[0.8rem] text-muted-foreground">
-          Hold <kbd className="font-mono">F D S</kbd> + <kbd className="font-mono">J K L</kbd> together for dots 1–6,
-          release to type. <kbd className="font-mono">Space</kbd>, <kbd className="font-mono">Enter</kbd>,{' '}
-          <kbd className="font-mono">Backspace</kbd> work as usual.
+          {t.hold} <kbd className="font-mono">F D S</kbd> + <kbd className="font-mono">J K L</kbd> {t.together}{' '}
+          <kbd className="font-mono">Space</kbd>, <kbd className="font-mono">Enter</kbd>,{' '}
+          <kbd className="font-mono">Backspace</kbd> {t.workAsUsual}
         </p>
       </div>
 
       <div className="flex flex-wrap items-center justify-center gap-6">
-        <div className="grid grid-cols-2 gap-2" role="group" aria-label="Tap dots to build a cell">
+        <div className="grid grid-cols-2 gap-2" role="group" aria-label={t.tapGroup}>
           {[1, 4, 2, 5, 3, 6].map((dot) => {
             const on = shown.has(dot);
             return (
@@ -108,7 +110,7 @@ export function PerkinsInput({ onCell, onSpace, onNewline, onBackspace }: Perkin
                 key={dot}
                 type="button"
                 aria-pressed={tapped.has(dot)}
-                aria-label={`Dot ${dot}`}
+                aria-label={t.dot(dot)}
                 onClick={() =>
                   setTapped((t) => {
                     const next = new Set(t);
@@ -140,25 +142,25 @@ export function PerkinsInput({ onCell, onSpace, onNewline, onBackspace }: Perkin
               setTapped(new Set());
             }}
           >
-            Add cell
+            {t.addCell}
           </Button>
         </div>
       </div>
 
       <div className="flex flex-wrap justify-center gap-2">
         <Button variant="outline" size="sm" onClick={onSpace}>
-          <Space aria-hidden="true" /> Space
+          <Space aria-hidden="true" /> {t.space}
         </Button>
         <Button variant="outline" size="sm" onClick={onNewline}>
-          <CornerDownLeft aria-hidden="true" /> New line
+          <CornerDownLeft aria-hidden="true" /> {t.newLine}
         </Button>
         <Button variant="outline" size="sm" onClick={onBackspace}>
-          <Delete aria-hidden="true" /> Delete
+          <Delete aria-hidden="true" /> {t.delete}
         </Button>
       </div>
 
       <p className="text-center text-[0.8rem] text-muted-foreground" aria-live="polite">
-        {last ? `Last cell typed: ${describeCell(last)}` : '\u00a0'}
+        {last ? t.lastCell(cellToDots(last)) : '\u00a0'}
       </p>
     </div>
   );

@@ -3,6 +3,7 @@ import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-route
 import { Analytics } from '@vercel/analytics/react';
 import { Toaster } from '@/components/ui/sonner';
 import Convert from './pages/Convert';
+import { useMessages } from './i18n';
 
 const Read = lazy(() => import('./pages/Read'));
 const Learn = lazy(() => import('./pages/Learn'));
@@ -12,23 +13,18 @@ const Accessibility = lazy(() => import('./pages/Accessibility'));
 const Feedback = lazy(() => import('./pages/Feedback'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 
-const TITLES: Record<string, string> = {
-  '/': 'BrailleBridge — Convert text, PDFs and photos to braille',
-  '/read': 'Read braille — BrailleBridge',
-  '/learn': 'Learn Unified English Braille — BrailleBridge',
-  '/about': 'About — BrailleBridge',
-  '/faq': 'FAQ — BrailleBridge',
-  '/accessibility': 'Accessibility — BrailleBridge',
-  '/feedback': 'Feedback — BrailleBridge',
-};
 
 /** Title, scroll position and focus on navigation, so screen readers hear the new page. */
 function RouteEffects() {
   const { pathname } = useLocation();
   const first = useRef(true);
+  const meta = useMessages().meta;
 
   useEffect(() => {
-    document.title = TITLES[pathname] ?? 'Page not found — BrailleBridge';
+    document.title = meta.titles[pathname] ?? meta.notFoundTitle;
+  }, [pathname, meta]);
+
+  useEffect(() => {
     if (first.current) {
       first.current = false;
       return;

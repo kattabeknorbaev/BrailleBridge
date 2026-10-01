@@ -12,11 +12,12 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { ACCEPTED_FILE_TYPES, type ImportResult, type OcrMode } from '@/lib/import';
+import { ACCEPTED_FILE_TYPES, type ImportNote, type ImportResult, type OcrMode } from '@/lib/import';
 import { cloudAvailable } from '@/integrations/supabase/client';
 import { countWords } from '@/lib/text-tools';
 import { cn } from '@/lib/utils';
-import { SAMPLES } from './samples';
+import { useLocale, useMessages, type Messages } from '@/i18n';
+import { SAMPLES, type Sample } from './samples';
 
 export interface ImportState {
   fraction: number;
@@ -27,7 +28,7 @@ interface SourcePanelProps {
   text: string;
   onTextChange: (text: string) => void;
   onFile: (file: File) => void;
-  onSample: (title: string, text: string) => void;
+  onSample: (sample: Sample) => void;
   onClear: () => void;
   importing: ImportState | null;
   onCancelImport: () => void;
@@ -38,17 +39,21 @@ interface SourcePanelProps {
   onOcrModeChange: (mode: OcrMode) => void;
 }
 
-const SOURCE_LABEL: Record<ImportResult['source'], string> = {
-  pdf: 'Text read directly from the PDF',
-  docx: 'Text read from the Word document',
-  text: 'Text file',
-  brf: 'Back-translated from a BRF file',
-  'ocr-cloud': 'Recognised with cloud AI',
-  'ocr-device': 'Recognised on this device',
-};
+function noteText(note: ImportNote, t: Messages['convert']['source']['notes']): string {
+  switch (note.kind) {
+    case 'cloud-fallback':
+      return t.cloudFallback;
+    case 'page-limit':
+      return t.pageLimit(note.read, note.total);
+    default:
+      return t[note.kind];
+  }
+}
 
 export function SourcePanel(props: SourcePanelProps) {
   const { text, onTextChange, onFile, importing, lastImport } = props;
+  const t = useMessages().convert.source;
+  const locale = useLocale();
   const fileInput = useRef<HTMLInputElement>(null);
   const cameraInput = useRef<HTMLInputElement>(null);
   const [dragging, setDragging] = useState(false);
@@ -71,7 +76,12 @@ export function SourcePanel(props: SourcePanelProps) {
     takeFile(e.dataTransfer.files);
   };
 
-  const words = countWords(text);
+  // Samples in the interface language first.
+  const sampleGroups = [
+    { label: 'Oʻzbekcha', items: SAMPLES.filter((s) => s.code === 'uz') },
+    { label: 'English', items: SAMPLES.filter((s) => s.code !== 'uz') },
+  ];
+  if (locale === 'en') sampleGroups.reverse();
 
   return (
     <section
@@ -95,9 +105,9 @@ export function SourcePanel(props: SourcePanelProps) {
           <span className="mr-2 inline-flex size-6 items-center justify-center rounded-full bg-primary text-[0.75rem] text-primary-foreground">
             1
           </span>
-          Print text
+          {t.heading}
         </h2>
-        <span className="hidden text-[0.8rem] text-muted-foreground sm:inline">Type, paste or open a file</span>
+        <span className="hidden text-[0.8rem] text-muted-foreground sm:inline">{t.hint}</span>
       </div>
 
       <div className="flex flex-wrap items-center gap-2 border-b px-4 py-3">
@@ -129,56 +139,57 @@ export function SourcePanel(props: SourcePanelProps) {
 
         <Button variant="default" size="sm" onClick={() => fileInput.current?.click()} disabled={!!importing}>
           <FileUp aria-hidden="true" />
-          Open file
+          {t.openFile}
         </Button>
         <Button variant="outline" size="sm" onClick={() => cameraInput.current?.click()} disabled={!!importing}>
           <Camera aria-hidden="true" />
-          <span className="hidden sm:inline">Take photo</span>
-          <span className="sm:hidden">Photo</span>
+          <span className="hidden sm:inline">{t.takePhoto}</span>
+          <span className="sm:hidden">{t.photoShort}</span>
         </Button>
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="outline" size="sm" disabled={!!importing}>
               <Sparkles aria-hidden="true" />
-              Samples
+              {t.samples}
               <ChevronDown aria-hidden="true" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Try a sample</DropdownMenuLabel>
-            {SAMPLES.map((sample) => (
-              <DropdownMenuItem key={sample.id} className="min-h-10" onSelect={() => props.onSample(sample.title, sample.text)}>
-                {sample.title}
-              </DropdownMenuItem>
+          <DropdownMenuContent align="end" className="min-w-52">
+            {sampleGroups.map((group, gi) => (
+              <div key={group.label}>
+                {gi > 0 && <DropdownMenuSeparator />}
+                <DropdownMenuLabel>{group.label}</DropdownMenuLabel>
+                {group.items.map((sample) => (
+                  <DropdownMenuItem key={sample.id} className="min-h-10" onSelect={() => props.onSample(sample)}>
+                    {sample.title}
+                  </DropdownMenuItem>
+                ))}
+              </div>
             ))}
           </DropdownMenuContent>
         </DropdownMenu>
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="ml-auto h-9 w-9" aria-label="Text recognition settings">
+            <Button variant="ghost" size="icon" className="ml-auto h-9 w-9" aria-label={t.ocrSettings}>
               <Settings2 />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="max-w-xs">
-            <DropdownMenuLabel>Text recognition for photos and scans</DropdownMenuLabel>
+            <DropdownMenuLabel>{t.ocrTitle}</DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuRadioGroup value={props.ocrMode} onValueChange={(v) => props.onOcrModeChange(v as OcrMode)}>
               <DropdownMenuRadioItem value="auto" disabled={!cloudAvailable} className="items-start py-2">
                 <span>
-                  <span className="block font-semibold">Cloud AI (most accurate)</span>
-                  <span className="block text-[0.8rem] text-muted-foreground">
-                    The image is sent for recognition and not stored. Falls back to on-device.
-                  </span>
+                  <span className="block font-semibold">{t.cloudTitle}</span>
+                  <span className="block text-[0.8rem] text-muted-foreground">{t.cloudDescription}</span>
                 </span>
               </DropdownMenuRadioItem>
               <DropdownMenuRadioItem value="device" className="items-start py-2">
                 <span>
-                  <span className="block font-semibold">This device only (private)</span>
-                  <span className="block text-[0.8rem] text-muted-foreground">
-                    Nothing leaves your device. Slower, best with clear printed text.
-                  </span>
+                  <span className="block font-semibold">{t.deviceTitle}</span>
+                  <span className="block text-[0.8rem] text-muted-foreground">{t.deviceDescription}</span>
                 </span>
               </DropdownMenuRadioItem>
             </DropdownMenuRadioGroup>
@@ -191,29 +202,29 @@ export function SourcePanel(props: SourcePanelProps) {
           <Info className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden="true" />
           <div className="flex-1 space-y-1">
             <p className="font-semibold">
-              {lastImport.fileName} — {SOURCE_LABEL[lastImport.source]}
+              {lastImport.fileName} — {t.sources[lastImport.source]}
             </p>
             {lastImport.notes.map((note) => (
-              <p key={note} className="text-muted-foreground">
-                {note}
+              <p key={note.kind} className="text-muted-foreground">
+                {noteText(note, t.notes)}
               </p>
             ))}
-            <p className="text-muted-foreground">Check the text for recognition mistakes before exporting.</p>
+            <p className="text-muted-foreground">{t.checkText}</p>
             {lastImport.original && (
               <Button variant="link" className="h-auto p-0 text-[0.85rem]" onClick={props.onUndoReflow}>
                 <Undo2 aria-hidden="true" />
-                Keep the original line breaks
+                {t.keepLineBreaks}
               </Button>
             )}
           </div>
-          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={props.onDismissImport} aria-label="Dismiss">
+          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={props.onDismissImport} aria-label={t.dismiss}>
             <X />
           </Button>
         </div>
       )}
 
       <label htmlFor={editorId} className="sr-only">
-        Print text to translate into braille
+        {t.editorLabel}
       </label>
       <textarea
         id={editorId}
@@ -221,17 +232,15 @@ export function SourcePanel(props: SourcePanelProps) {
         onChange={(e) => onTextChange(e.target.value)}
         aria-describedby={helpId}
         spellCheck
-        placeholder="Type or paste text here — or open a photo, PDF, Word document or text file."
+        placeholder={t.placeholder}
         className="min-h-[20rem] flex-1 resize-none rounded-b-xl bg-transparent px-4 py-4 text-[1.05rem] leading-relaxed placeholder:text-muted-foreground focus-visible:ring-inset focus-visible:ring-offset-0"
       />
 
       <div className="flex items-center gap-3 border-t px-4 py-2 text-[0.8rem] text-muted-foreground">
-        <span id={helpId}>
-          {words.toLocaleString()} {words === 1 ? 'word' : 'words'} · {text.length.toLocaleString()} characters
-        </span>
+        <span id={helpId}>{t.counts(countWords(text), text.length)}</span>
         {text && (
           <Button variant="ghost" size="sm" className="ml-auto h-8" onClick={props.onClear}>
-            Clear
+            {t.clear}
           </Button>
         )}
       </div>
@@ -244,9 +253,9 @@ export function SourcePanel(props: SourcePanelProps) {
         >
           <Loader2 className="size-8 animate-spin text-primary" aria-hidden="true" />
           <p className="font-semibold">{importing.label}</p>
-          <Progress value={Math.round(importing.fraction * 100)} className="h-2 w-full max-w-xs" aria-label="Import progress" />
+          <Progress value={Math.round(importing.fraction * 100)} className="h-2 w-full max-w-xs" aria-label={t.progressLabel} />
           <Button variant="outline" size="sm" onClick={props.onCancelImport}>
-            Cancel
+            {t.cancel}
           </Button>
         </div>
       )}
@@ -259,8 +268,8 @@ export function SourcePanel(props: SourcePanelProps) {
           )}
         >
           <FileUp className="size-8 text-primary" aria-hidden="true" />
-          <p className="font-semibold">Drop to open</p>
-          <p className="text-[0.85rem] text-muted-foreground">Photo, PDF, Word, text or BRF</p>
+          <p className="font-semibold">{t.dropTitle}</p>
+          <p className="text-[0.85rem] text-muted-foreground">{t.dropTypes}</p>
         </div>
       )}
     </section>

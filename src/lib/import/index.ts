@@ -4,19 +4,27 @@
  */
 import { looksLikeBrailleAscii, asciiToUnicode, backTranslate } from '@/lib/braille';
 import { looksHardWrapped, reflowText } from '@/lib/text-tools';
-import { CloudOcrError, recognizeInCloud, recognizeOnDevice, type Progress } from './ocr';
+import { CloudOcrError, recognizeInCloud, recognizeOnDevice, type OcrLanguage, type Progress } from './ocr';
+
+export type { OcrLanguage, Progress, ProgressStep } from './ocr';
 import { extractPdfText, MAX_OCR_PAGES, renderPdfPages } from './pdf';
 
 export type OcrMode = 'auto' | 'device';
 
 export type ImportSource = 'pdf' | 'docx' | 'text' | 'brf' | 'ocr-cloud' | 'ocr-device';
 
+/** Things the user should know about an import (the UI turns these into text). */
+export type ImportNote =
+  | { kind: 'brf-back-translated' }
+  | { kind: 'cloud-fallback'; reason: CloudOcrError['code'] | 'unknown' }
+  | { kind: 'page-limit'; read: number; total: number }
+  | { kind: 'reflowed' };
+
 export interface ImportResult {
   text: string;
   source: ImportSource;
   fileName: string;
-  /** Things the user should know about (fallbacks, page limits, reflow). */
-  notes: string[];
+  notes: ImportNote[];
   /** The text before line reflow, so it can be undone. */
   original?: string;
 }
@@ -37,7 +45,13 @@ export const ACCEPTED_FILE_TYPES = [
   '.brf',
 ].join(',');
 
-export class ImportError extends Error {}
+export type ImportErrorCode = 'too-large' | 'unsupported' | 'no-text-image' | 'no-text-file';
+
+export class ImportError extends Error {
+  constructor(readonly code: ImportErrorCode) {
+    super(code);
+  }
+}
 
 type Kind = 'image' | 'pdf' | 'docx' | 'text' | 'brf' | 'unknown';
 
@@ -81,15 +95,14 @@ async function recognize(
   cloud: (() => Promise<string>) | null,
   device: () => Promise<string>,
   signal: AbortSignal | undefined,
-  notes: string[],
+  notes: ImportNote[],
 ): Promise<{ text: string; source: ImportSource }> {
   if (cloud) {
     try {
       return { text: await cloud(), source: 'ocr-cloud' };
     } catch (error) {
       if (signal?.aborted || (error as Error).name === 'AbortError') throw error;
-      const reason = error instanceof CloudOcrError ? ` (${error.message.replace(/\.$/, '')})` : '';
-      notes.push(`Cloud recognition was unavailable${reason}, so the text was read on this device instead.`);
+      notes.push({ kind: 'cloud-fallback', reason: error instanceof CloudOcrError ? error.code : 'unknown' });
     }
   }
   return { text: await device(), source: 'ocr-device' };
@@ -97,14 +110,15 @@ async function recognize(
 
 export async function importFile(
   file: File,
-  options: { ocrMode: OcrMode; onProgress?: Progress; signal?: AbortSignal },
+  options: { ocrMode: OcrMode; language?: OcrLanguage; onProgress?: Progress; signal?: AbortSignal },
 ): Promise<ImportResult> {
   const onProgress: Progress = options.onProgress ?? (() => {});
-  const notes: string[] = [];
+  const notes: ImportNote[] = [];
   const kind = kindOf(file);
+  const language = options.language ?? 'eng';
 
   if (file.size > MAX_FILE_BYTES) {
-    throw new ImportError('This file is larger than 25 MB. Try a smaller file or split the document.');
+    throw new ImportError('too-large');
   }
 
   let text = '';
@@ -120,11 +134,11 @@ export async function importFile(
       const raw = await file.text();
       text = backTranslate(looksLikeBrailleAscii(raw) ? asciiToUnicode(raw) : raw, 2);
       source = 'brf';
-      notes.push('This BRF file was back-translated from grade 2 braille. Check the text before re-embossing it.');
+      notes.push({ kind: 'brf-back-translated' });
       break;
     }
     case 'docx': {
-      onProgress(0.3, 'Reading the Word document…');
+      onProgress(0.3, { kind: 'reading-word' });
       const mammoth = await import('mammoth/mammoth.browser');
       const result = await mammoth.extractRawText({ arrayBuffer: await file.arrayBuffer() });
       text = result.value;
@@ -132,8 +146,8 @@ export async function importFile(
       break;
     }
     case 'pdf': {
-      onProgress(0.05, 'Reading the PDF…');
-      const pdf = await extractPdfText(file, (f) => onProgress(0.05 + f * 0.5, 'Reading the PDF…'));
+      onProgress(0.05, { kind: 'reading-pdf' });
+      const pdf = await extractPdfText(file, (f) => onProgress(0.05 + f * 0.5, { kind: 'reading-pdf' }));
       if (pdf.hasTextLayer) {
         text = pdf.text;
         source = 'pdf';
@@ -144,17 +158,17 @@ export async function importFile(
       const result = await recognize(
         useCloud
           ? () => {
-              onProgress(0.3, 'Recognising scanned pages with cloud AI…');
+              onProgress(0.3, { kind: 'cloud' });
               return recognizeInCloud(file, 'application/pdf', options.signal);
             }
           : null,
         async () => {
-          onProgress(0.1, 'Preparing scanned pages…');
+          onProgress(0.1, { kind: 'preparing-scans' });
           const pages = await renderPdfPages(file);
           if (pdf.pageCount > MAX_OCR_PAGES) {
-            notes.push(`Only the first ${MAX_OCR_PAGES} of ${pdf.pageCount} scanned pages were read.`);
+            notes.push({ kind: 'page-limit', read: MAX_OCR_PAGES, total: pdf.pageCount });
           }
-          return recognizeOnDevice(pages, onProgress, options.signal);
+          return recognizeOnDevice(pages, language, onProgress, options.signal);
         },
         options.signal,
         notes,
@@ -164,17 +178,17 @@ export async function importFile(
       break;
     }
     case 'image': {
-      onProgress(0.05, 'Preparing the image…');
+      onProgress(0.05, { kind: 'preparing-image' });
       const blob = await prepareImage(file);
       const useCloud = options.ocrMode === 'auto' && blob.size <= MAX_CLOUD_BYTES;
       const result = await recognize(
         useCloud
           ? () => {
-              onProgress(0.3, 'Recognising text with cloud AI…');
+              onProgress(0.3, { kind: 'cloud' });
               return recognizeInCloud(blob, blob.type || file.type, options.signal);
             }
           : null,
-        () => recognizeOnDevice([blob], onProgress, options.signal),
+        () => recognizeOnDevice([blob], language, onProgress, options.signal),
         options.signal,
         notes,
       );
@@ -183,25 +197,21 @@ export async function importFile(
       break;
     }
     default:
-      throw new ImportError('This file type is not supported. Use a photo, PDF, Word (.docx), text or BRF file.');
+      throw new ImportError('unsupported');
   }
 
   text = text.replace(/\r\n?/g, '\n').trim();
   if (!text) {
-    throw new ImportError(
-      kind === 'image' || source === 'ocr-cloud' || source === 'ocr-device'
-        ? 'No text was found. Try a sharper photo with good lighting, taken straight on.'
-        : 'This file does not contain any text.',
-    );
+    throw new ImportError(kind === 'image' || source === 'ocr-cloud' || source === 'ocr-device' ? 'no-text-image' : 'no-text-file');
   }
 
   let original: string | undefined;
   if ((kind === 'pdf' || kind === 'image') && looksHardWrapped(text)) {
     original = text;
     text = reflowText(text);
-    notes.push('Line breaks from the printed page layout were joined into paragraphs.');
+    notes.push({ kind: 'reflowed' });
   }
 
-  onProgress(1, 'Done');
+  onProgress(1, { kind: 'done' });
   return { text, source, fileName: file.name, notes, original };
 }
