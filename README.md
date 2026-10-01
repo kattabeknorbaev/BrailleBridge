@@ -4,7 +4,7 @@
 
 [![CI](https://github.com/kattabeknorbaev/BrailleBridge/actions/workflows/ci.yml/badge.svg)](https://github.com/kattabeknorbaev/BrailleBridge/actions/workflows/ci.yml) [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-**Live app:** https://bridgebraille.lovable.app (Uzbek interface: add `?lang=uz`)
+**Live app:** https://www.braillebridge.xyz (Uzbek interface: add `?lang=uz`)
 
 ![The converter: print text on the left, braille with print words above it on the right](docs/converter-light.png)
 

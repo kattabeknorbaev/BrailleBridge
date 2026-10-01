@@ -1,5 +1,5 @@
 # BrailleBridge Robots.txt
-# https://bridgebraille.lovable.app
+# https://www.braillebridge.xyz
 
 User-agent: Googlebot
 Allow: /
@@ -28,4 +28,4 @@ User-agent: *
 Allow: /
 
 # Sitemap
-Sitemap: https://bridgebraille.lovable.app/sitemap.xml
+Sitemap: https://www.braillebridge.xyz/sitemap.xml
