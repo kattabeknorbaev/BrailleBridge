@@ -17,6 +17,23 @@ const ALLOWED_MIME_TYPES = [
 // Maximum file size: 20MB (base64 is ~1.37x original size)
 const MAX_BASE64_SIZE = 20 * 1024 * 1024 * 1.37;
 
+// Vision models on the Lovable AI gateway, newest first.
+const OCR_MODELS = ['google/gemini-3.8-flash', 'google/gemini-3-flash-preview', 'google/gemini-2.5-flash'];
+
+// The text is turned into braille, so it must be a faithful copy: a "corrected"
+// word or a Russian к in place of an Uzbek қ becomes wrong braille.
+const OCR_INSTRUCTIONS = `You transcribe printed text from images for conversion to braille. Copy the text exactly as printed.
+
+Rules:
+1. Transcribe every piece of text visible, in reading order. If text is in columns, finish each column before the next.
+2. Keep the original language and alphabet. Never translate, and never transliterate between Latin and Cyrillic.
+3. Copy every letter exactly as printed. Never replace a letter with a similar-looking letter from another language. Uzbek Cyrillic uses ў, қ, ғ and ҳ, which are different letters from у, к, г and х. Uzbek Latin writes oʻ and gʻ with a turned comma (ʻ) and uses ʼ as a separate sign.
+4. Do not fix spelling, grammar or punctuation, and do not complete cut-off words. Keep numbers, punctuation and capitalization exactly as printed.
+5. Keep paragraphs and line breaks between paragraphs. For tables, put the cells of a row on one line separated by spaces.
+6. If a word is hard to read, write the most likely reading of the printed letters themselves.
+7. For multi-page documents, separate pages with a blank line.
+8. Return only the transcribed text as plain text: no explanations, comments, markdown or code fences.`;
+
 // Validate base64 string format
 function isValidBase64(str: string): boolean {
   if (!str || typeof str !== 'string') return false;
@@ -154,58 +171,58 @@ serve(async (req) => {
     const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout
 
     try {
-      const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${LOVABLE_API_KEY}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          model: 'google/gemini-2.5-flash',
-          messages: [
-            {
-              role: 'system',
-              content: `You are an OCR (Optical Character Recognition) assistant. Your task is to extract ALL text from images accurately.
-
-Instructions:
-1. Extract every piece of text visible in the image
-2. Preserve the original formatting as much as possible (paragraphs, line breaks, headings)
-3. If text is in columns, read left to right, top to bottom
-4. Correct obvious OCR errors (like 'rn' instead of 'm')
-5. Keep punctuation and capitalization as in the original
-6. For tables, preserve structure using spaces or tabs
-7. If you cannot read a word clearly, make your best guess based on context
-8. For multi-page documents, separate pages with a blank line
-9. Return ONLY the extracted text as plain text: no explanations, comments, markdown or code fences`
-            },
-            {
-              role: 'user',
-              content: [
-                {
-                  type: 'text',
-                  text: 'Please extract all text from this image. Return only the extracted text, preserving formatting.'
-                },
-                {
-                  type: 'image_url',
-                  image_url: {
-                    url: `data:${normalizedMimeType};base64,${image}`
+      // Newest model first. A model the gateway no longer (or not yet) offers
+      // is skipped, so retiring one never breaks recognition. OCR_MODEL, if
+      // set, is tried before the others.
+      const models = [Deno.env.get('OCR_MODEL'), ...OCR_MODELS].filter((m): m is string => Boolean(m));
+      let response: Response | null = null;
+      let model = '';
+      let errorText = '';
+      for (model of models) {
+        response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model,
+            messages: [
+              { role: 'system', content: OCR_INSTRUCTIONS },
+              {
+                role: 'user',
+                content: [
+                  {
+                    type: 'text',
+                    text: 'Transcribe all the text in this image exactly. Return only the text.'
+                  },
+                  {
+                    type: 'image_url',
+                    image_url: {
+                      url: `data:${normalizedMimeType};base64,${image}`
+                    }
                   }
-                }
-              ]
-            }
-          ],
-          // Enough for a long multi-page document (a dense page is ~700 tokens).
-          max_tokens: 16384,
-        }),
-        signal: controller.signal,
-      });
+                ]
+              }
+            ],
+            // Enough for a long multi-page document (a dense page is ~700 tokens).
+            max_tokens: 16384,
+          }),
+          signal: controller.signal,
+        });
+        if (response.ok) break;
+        errorText = await response.text();
+        const modelUnavailable = (response.status === 400 || response.status === 404) && /model/i.test(errorText);
+        if (!modelUnavailable) break;
+        console.warn('Model unavailable, trying the next one:', model, response.status, errorText);
+      }
 
       clearTimeout(timeoutId);
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('AI Gateway error:', response.status, errorText);
-        
+      if (!response || !response.ok) {
+        console.error('AI Gateway error:', response?.status, errorText);
+        if (!response) throw new Error('AI Gateway error: no model available');
+
         if (response.status === 429) {
           return new Response(
             JSON.stringify({ error: 'Rate limit exceeded. Please try again in a moment.' }),
@@ -226,10 +243,10 @@ Instructions:
       const data = await response.json();
       const extractedText = data.choices?.[0]?.message?.content || '';
 
-      console.log('OCR completed, extracted', extractedText.length, 'characters');
+      console.log('OCR completed with', model, '- extracted', extractedText.length, 'characters');
 
       return new Response(
-        JSON.stringify({ text: extractedText }),
+        JSON.stringify({ text: extractedText, model }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
 

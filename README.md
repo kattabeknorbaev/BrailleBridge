@@ -83,6 +83,18 @@ The Uzbek translator ([`src/lib/braille/uzbek/`](src/lib/braille/uzbek/uzbek.ts)
 
 ³ Up to capital letters and quote style, which uncapitalised braille cannot record. Details are in [`uzbek.test.ts`](src/lib/braille/__tests__/uzbek.test.ts); the fixture is rebuilt with [`scripts/build-uzbek-fixture.ts`](scripts/build-uzbek-fixture.ts).
 
+### Text recognition (OCR)
+
+Measured with [`scripts/ocr-bench/bench.ts`](scripts/ocr-bench/bench.ts) on Uzbek text, in both alphabets, rendered as clean scans (serif and sans-serif), small low-resolution print and a photo-like image (tilted, blurred, noisy and with a shadow across the page). Characters recognised wrongly:
+
+| | Clean scans | Small print | Shaded photo |
+| --- | --- | --- | --- |
+| On-device, before (both Uzbek models at once) | 0.4–2.1% | 0.6–0.7% | 36–70% |
+| On-device, now (adaptive thresholding, one model per alphabet) | 0.4–1.4% | 0.4–0.7% | 1.1–1.4% |
+| Cloud (Gemini) | 0% | 0% | 0–0.9% |
+
+These are synthetic images, so real photos will do worse; the next step is a test set of real documents from braille users in Uzbekistan. The cloud model was also found to replace Uzbek Cyrillic letters with similar Russian ones (қ → к, ҳ → х) on photos, which changes the braille, so its instructions now require an exact copy.
+
 Some conventions differ between Uzbek braille sources, so they are settings rather than fixed rules: whether capitals are marked (dot 6) and whether Latin text is written letter by letter or as Cyrillic. They should be confirmed with braille readers in Uzbekistan.
 
 ## Getting started
