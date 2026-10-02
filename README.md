@@ -83,6 +83,8 @@ The Uzbek translator ([`src/lib/braille/uzbek/`](src/lib/braille/uzbek/uzbek.ts)
 
 ³ Up to capital letters and quote style, which uncapitalised braille cannot record. Details are in [`uzbek.test.ts`](src/lib/braille/__tests__/uzbek.test.ts); the fixture is rebuilt with [`scripts/build-uzbek-fixture.ts`](scripts/build-uzbek-fixture.ts).
 
+Some conventions differ between Uzbek braille sources, so they are settings rather than fixed rules: whether capitals are marked (dot 6) and whether Latin text is written letter by letter or as Cyrillic. They should be confirmed with braille readers in Uzbekistan.
+
 ### Text recognition (OCR)
 
 Measured with [`scripts/ocr-bench/bench.ts`](scripts/ocr-bench/bench.ts) on Uzbek text, in both alphabets, rendered as clean scans (serif and sans-serif), small low-resolution print and a photo-like image (tilted, blurred, noisy and with a shadow across the page). Characters recognised wrongly:
@@ -91,11 +93,19 @@ Measured with [`scripts/ocr-bench/bench.ts`](scripts/ocr-bench/bench.ts) on Uzbe
 | --- | --- | --- | --- |
 | On-device, before (both Uzbek models at once) | 0.4–2.1% | 0.6–0.7% | 36–70% |
 | On-device, now (adaptive thresholding, one model per alphabet) | 0.4–1.4% | 0.4–0.7% | 1.1–1.4% |
-| Cloud (Gemini) | 0% | 0% | 0–0.9% |
+| Cloud, before (Gemini 2.5 Flash) | 0% | 0% | 0–0.9% |
+| Cloud, now (Gemini 3.8 Flash, exact-copy instructions) | 0% | 0% | 0–0.2% |
 
-These are synthetic images, so real photos will do worse; the next step is a test set of real documents from braille users in Uzbekistan. The cloud model was also found to replace Uzbek Cyrillic letters with similar Russian ones (қ → к, ҳ → х) on photos, which changes the braille, so its instructions now require an exact copy.
+The old cloud setup replaced Uzbek Cyrillic letters with similar Russian ones on the shaded photo (қ → к, ҳ → х), which changes the braille, and wrote oʻ with a plain apostrophe. Its instructions now require an exact copy. Cloud settings compared on the same images:
 
-Some conventions differ between Uzbek braille sources, so they are settings rather than fixed rules: whether capitals are marked (dot 6) and whether Latin text is written letter by letter or as Cyrillic. They should be confirmed with braille readers in Uzbekistan.
+| Cloud setting | Wrong letters (all 8 images) | Median time | Slowest |
+| --- | --- | --- | --- |
+| Gemini 3.8 Flash, low thinking (used) | 1 | 4.3 s | 11.8 s |
+| Gemini 3.8 Flash, minimal thinking | 2 | 3.8 s | 7.7 s |
+| Gemini 3.8 Flash, default thinking | 2 | 7.8 s | 10.6 s |
+| Gemini 3.1 Flash Lite | 4 | 2.8 s | 5.2 s |
+
+These are synthetic images, so real photos will do worse; the next step is a test set of real documents from braille users in Uzbekistan.
 
 ## Getting started
 
