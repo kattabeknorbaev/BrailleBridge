@@ -162,3 +162,29 @@ export async function tesseract(langs: string, images: HTMLCanvasElement[], para
   await worker.terminate();
   return out;
 }
+
+/** Recognise images with the cloud function; `options` picks a model or reasoning effort to compare. */
+export async function cloud(images: HTMLCanvasElement[], options: { model?: string; effort?: string } = {}) {
+  const { getSupabase } = await import('/src/integrations/supabase/client.ts');
+  const supabase = await getSupabase();
+  if (!supabase) throw new Error('Supabase is not configured (.env)');
+  const out: { text: string; seconds: number; model?: string; effort?: string; error?: string }[] = [];
+  for (const image of images) {
+    const blob = await new Promise<Blob>((resolve) => image.toBlob((b) => resolve(b!), 'image/png'));
+    const bytes = new Uint8Array(await blob.arrayBuffer());
+    let binary = '';
+    for (let i = 0; i < bytes.length; i += 0x8000) binary += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+    const t0 = performance.now();
+    const { data, error } = await supabase.functions.invoke('ocr', {
+      body: { image: btoa(binary), mimeType: 'image/png', ...options },
+    });
+    out.push({
+      text: String(data?.text ?? ''),
+      seconds: (performance.now() - t0) / 1000,
+      model: data?.model,
+      effort: data?.effort,
+      error: error?.message,
+    });
+  }
+  return out;
+}

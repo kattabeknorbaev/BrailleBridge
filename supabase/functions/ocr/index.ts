@@ -17,8 +17,18 @@ const ALLOWED_MIME_TYPES = [
 // Maximum file size: 20MB (base64 is ~1.37x original size)
 const MAX_BASE64_SIZE = 20 * 1024 * 1024 * 1.37;
 
-// Vision models on the Lovable AI gateway, newest first.
-const OCR_MODELS = ['google/gemini-3.8-flash', 'google/gemini-3-flash-preview', 'google/gemini-2.5-flash'];
+// Vision models on the Lovable AI gateway, in order of preference.
+const OCR_MODELS = [
+  'google/gemini-3.8-flash',
+  'google/gemini-3-flash-preview',
+  'google/gemini-3.1-flash-lite',
+  'google/gemini-2.5-flash',
+];
+
+// Gemini 3 models think before answering. Copying text needs little of that,
+// and thinking adds seconds (up to 40 s per page in tests) and billed tokens.
+const REASONING_EFFORT = 'low';
+const REASONING_EFFORTS = ['none', 'minimal', 'low', 'medium', 'high', 'default'];
 
 // The text is turned into braille, so it must be a faithful copy: a "corrected"
 // word or a Russian к in place of an Uzbek қ becomes wrong braille.
@@ -100,6 +110,10 @@ serve(async (req) => {
     }
 
     const { image, mimeType } = body;
+    // Optional overrides used by scripts/ocr-bench to compare settings,
+    // limited to the models and efforts above.
+    const requestedModel = OCR_MODELS.includes(body.model) ? body.model as string : undefined;
+    const requestedEffort = REASONING_EFFORTS.includes(body.effort) ? body.effort as string : undefined;
     
     // Validate image data presence and type
     if (!image) {
@@ -171,15 +185,8 @@ serve(async (req) => {
     const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout
 
     try {
-      // Newest model first. A model the gateway no longer (or not yet) offers
-      // is skipped, so retiring one never breaks recognition. OCR_MODEL, if
-      // set, is tried before the others.
-      const models = [Deno.env.get('OCR_MODEL'), ...OCR_MODELS].filter((m): m is string => Boolean(m));
-      let response: Response | null = null;
-      let model = '';
-      let errorText = '';
-      for (model of models) {
-        response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+      const callGateway = (model: string, effort: string | undefined) =>
+        fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${LOVABLE_API_KEY}`,
@@ -207,13 +214,35 @@ serve(async (req) => {
             ],
             // Enough for a long multi-page document (a dense page is ~700 tokens).
             max_tokens: 16384,
+            ...(effort ? { reasoning_effort: effort } : {}),
           }),
           signal: controller.signal,
         });
+
+      // A model the gateway no longer (or not yet) offers is skipped, so
+      // retiring one never breaks recognition. OCR_MODEL, if set, goes first.
+      const models = [...new Set([requestedModel, Deno.env.get('OCR_MODEL'), ...OCR_MODELS])].filter(
+        (m): m is string => Boolean(m),
+      );
+      const preferredEffort = requestedEffort ?? REASONING_EFFORT;
+      let effort: string | undefined = preferredEffort === 'default' ? undefined : preferredEffort;
+      let response: Response | null = null;
+      let model = '';
+      let errorText = '';
+      for (let i = 0; i < models.length; i++) {
+        model = models[i];
+        response = await callGateway(model, effort);
         if (response.ok) break;
         errorText = await response.text();
-        const modelUnavailable = (response.status === 400 || response.status === 404) && /model/i.test(errorText);
-        if (!modelUnavailable) break;
+        const badRequest = response.status === 400 || response.status === 404;
+        if (badRequest && effort && /reason|effort|think/i.test(errorText)) {
+          // The gateway or model does not accept the reasoning setting: retry without it.
+          console.warn('Reasoning effort rejected, retrying without it:', model, errorText);
+          effort = undefined;
+          i--;
+          continue;
+        }
+        if (!(badRequest && /model/i.test(errorText))) break;
         console.warn('Model unavailable, trying the next one:', model, response.status, errorText);
       }
 
@@ -243,10 +272,10 @@ serve(async (req) => {
       const data = await response.json();
       const extractedText = data.choices?.[0]?.message?.content || '';
 
-      console.log('OCR completed with', model, '- extracted', extractedText.length, 'characters');
+      console.log('OCR completed with', model, effort ?? 'default', '- extracted', extractedText.length, 'characters');
 
       return new Response(
-        JSON.stringify({ text: extractedText, model }),
+        JSON.stringify({ text: extractedText, model, effort: effort ?? 'default' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
 
